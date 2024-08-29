@@ -105,7 +105,7 @@ export default class PluginSample extends Plugin {
             title: "全量备份到alist",
             position: "left",
             callback: () => {
-                let rect = document.querySelector("#plugin_siyuan-plugin-link_1").getBoundingClientRect();
+                let rect = document.querySelector("#plugin_siyuan-link_1").getBoundingClientRect();
                 this.addMenu2(rect);
                 // this.runbackup();
                 // showMessage("处理中...");

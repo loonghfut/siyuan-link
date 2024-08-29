@@ -2,13 +2,10 @@
   "name": "siyuan-link",
   "author": "steve",
   "url": "https://github.com/loonghfut/siyuan-link",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "minAppVersion": "3.0.12",
   "backends": [
-    "windows",
-    "linux",
-    "docker",
-    "android"
+    "all"
   ],
   "frontends": [
     "desktop",
