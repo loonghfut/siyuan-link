@@ -1,214 +1,193 @@
+
 import {
     Plugin,
     showMessage,
-    confirm,
-    Dialog,
-    Menu,
-    openTab,
-    adaptHotkey,
     getFrontend,
     getBackend,
     IModel,
-    Protyle,
-    openWindow,
-    IOperation,
-    Constants,
-    openMobileFileById,
-    lockScreen,
-    ICard,
-    ICardData
+    Menu,
 } from "siyuan";
 import "@/index.scss";
-
+// import * as api from "@/api"
 import HelloExample from "@/hello.svelte";
-import SettingExample from "@/setting-example.svelte";
+
+import {
+    getCurrentNotePath,
+    getNoteData,
+    getmd,
+    downloadImage,
+    putFileContent,
+    putFileContentM,
+    isconnect,
+    notebookId,
+    setNotebookConf,
+    outLog,
+    trunLog,
+    getNotebookName,
+    refreshURL,
+    handleDbResource,
+    transferLockAndReadonly,
+    // transferLockAndReadonlyDBUG,
+    exportAllDataPath,
+    downloadImageURL,
+    exportAllDataPathURL,
+    importAllDataURL,
+    // downloadBlob,
+    importAllData,
+    uploadToAList,
+    checkAlistConnection
+
+} from "@/myapi";
 
 import { SettingUtils } from "./libs/setting-utils";
-import { svelteDialog } from "./libs/dialog";
 
 const STORAGE_NAME = "menu-config";
 const TAB_TYPE = "custom_tab";
-const DOCK_TYPE = "dock_tab";
 
+export let currentDocId: string | null = null;
+export let url: string | null = null;
+export let token: string | null = null;
+export let serNum: string | null = null;
+export let alistname: string | null = null;
+export let alistmima: string | null = null;
+export let alistUrl: string | null = null;
+export let alistToPath: string | null = null;
+// let notePath: string | null = null;
 export default class PluginSample extends Plugin {
 
     customTab: () => IModel;
-    private isMobile: boolean;
-    private blockIconEventBindThis = this.blockIconEvent.bind(this);
     private settingUtils: SettingUtils;
 
     async onload() {
-        this.data[STORAGE_NAME] = { readonlyText: "Readonly" };
-
-        console.log("loading plugin-sample", this.i18n);
-
-        const frontEnd = getFrontend();
-        this.isMobile = frontEnd === "mobile" || frontEnd === "browser-mobile";
+        this.data[STORAGE_NAME] = { readonlyText: "Readon" };
         // 图标的制作参见帮助文档
-        this.addIcons(`<symbol id="iconFace" viewBox="0 0 32 32">
-<path d="M13.667 17.333c0 0.92-0.747 1.667-1.667 1.667s-1.667-0.747-1.667-1.667 0.747-1.667 1.667-1.667 1.667 0.747 1.667 1.667zM20 15.667c-0.92 0-1.667 0.747-1.667 1.667s0.747 1.667 1.667 1.667 1.667-0.747 1.667-1.667-0.747-1.667-1.667-1.667zM29.333 16c0 7.36-5.973 13.333-13.333 13.333s-13.333-5.973-13.333-13.333 5.973-13.333 13.333-13.333 13.333 5.973 13.333 13.333zM14.213 5.493c1.867 3.093 5.253 5.173 9.12 5.173 0.613 0 1.213-0.067 1.787-0.16-1.867-3.093-5.253-5.173-9.12-5.173-0.613 0-1.213 0.067-1.787 0.16zM5.893 12.627c2.28-1.293 4.040-3.4 4.88-5.92-2.28 1.293-4.040 3.4-4.88 5.92zM26.667 16c0-1.040-0.16-2.040-0.44-2.987-0.933 0.2-1.893 0.32-2.893 0.32-4.173 0-7.893-1.92-10.347-4.92-1.4 3.413-4.187 6.093-7.653 7.4 0.013 0.053 0 0.12 0 0.187 0 5.88 4.787 10.667 10.667 10.667s10.667-4.787 10.667-10.667z"></path>
+        //图标相关设置
+        //添加图标
+        this.addIcons(`<symbol id="iconTransfer" viewBox="0 0 32 32">
+<path d="M27.414 19.414l-4-4c-0.781-0.781-2.047-0.781-2.828 0s-0.781 2.047 0 2.828l1.586 1.586h-12.172c-1.105 0-2 0.895-2 2s0.895 2 2 2h12.172l-1.586 1.586c-0.781 0.781-0.781 2.047 0 2.828 0.39 0.39 0.902 0.586 1.414 0.586s1.024-0.195 1.414-0.586l4-4c0.781-0.781 0.781-2.047 0-2.828zM10.586 10.586l-4 4c-0.781 0.781-0.781 2.047 0 2.828 0.39 0.39 0.902 0.586 1.414 0.586s1.024-0.195 1.414-0.586l1.586-1.586h12.172c1.105 0 2-0.895 2-2s-0.895-2-2-2h-12.172l1.586-1.586c0.781-0.781 0.781-2.047 0-2.828s-2.047-0.781-2.828 0l-4 4c-0.781 0.781-0.781 2.047 0 2.828z"></path>
 </symbol>
 <symbol id="iconSaving" viewBox="0 0 32 32">
 <path d="M20 13.333c0-0.733 0.6-1.333 1.333-1.333s1.333 0.6 1.333 1.333c0 0.733-0.6 1.333-1.333 1.333s-1.333-0.6-1.333-1.333zM10.667 12h6.667v-2.667h-6.667v2.667zM29.333 10v9.293l-3.76 1.253-2.24 7.453h-7.333v-2.667h-2.667v2.667h-7.333c0 0-3.333-11.28-3.333-15.333s3.28-7.333 7.333-7.333h6.667c1.213-1.613 3.147-2.667 5.333-2.667 1.107 0 2 0.893 2 2 0 0.28-0.053 0.533-0.16 0.773-0.187 0.453-0.347 0.973-0.427 1.533l3.027 3.027h2.893zM26.667 12.667h-1.333l-4.667-4.667c0-0.867 0.12-1.72 0.347-2.547-1.293 0.333-2.347 1.293-2.787 2.547h-8.227c-2.573 0-4.667 2.093-4.667 4.667 0 2.507 1.627 8.867 2.68 12.667h2.653v-2.667h8v2.667h2.68l2.067-6.867 3.253-1.093v-4.707z"></path>
-</symbol>`);
+</symbol>
+<symbol id="iconDataTransferSimple" viewBox="0 0 32 32">
+<path d="M4 16h24M16 4v24M4 16l8-8 8 8"/>
+</symbol>
+<symbol id="iconDataTransferRetro" viewBox="0 0 32 32">
+<path d="M4 16h8v-2h-8v2zM20 16h8v-2h-8v2zM4 20h24v-2h-24v2zM16 4v24"/>
+</symbol>
+<symbol id="iconDataTransferDynamic" viewBox="0 0 32 32">
+<path d="M4 16c4-4 12-4 16 0s12 4 16 0M16 4v24M4 16l8-8 8 8M24 16c-4 4-12 4-16 0"/>
+</symbol>
+<symbol id="iconDataTransferTech" viewBox="0 0 32 32">
+<path d="M16 4h-2v24h2zM4 16h24M16 4l8 8-8 8zM8 8h16M24 24h-16"/>
+</symbol>
+`);
+        
 
-        const topBarElement = this.addTopBar({
-            icon: "iconFace",
+        //添加图标
+        this.addTopBar({
+            icon: "iconTransfer",
             title: this.i18n.addTopBarIcon,
             position: "right",
             callback: () => {
-                if (this.isMobile) {
-                    this.addMenu();
-                } else {
-                    let rect = topBarElement.getBoundingClientRect();
-                    // 如果被隐藏，则使用更多按钮
-                    if (rect.width === 0) {
-                        rect = document.querySelector("#barMore").getBoundingClientRect();
-                    }
-                    if (rect.width === 0) {
-                        rect = document.querySelector("#barPlugins").getBoundingClientRect();
-                    }
-                    this.addMenu(rect);
-                }
+                // console.log("TopBar Icon Clicked");
+                // this.run();
+                // this.catch();//新功能调试
+                // this.dbug();
+                let rect = document.querySelector("#barPlugins").getBoundingClientRect();
+                this.addMenu(rect);
+                // showMessage("处理中...");
+
             }
         });
-
-        const statusIconTemp = document.createElement("template");
-        statusIconTemp.innerHTML = `<div class="toolbar__item ariaLabel" aria-label="Remove plugin-sample Data">
-    <svg>
-        <use xlink:href="#iconTrashcan"></use>
-    </svg>
-</div>`;
-        statusIconTemp.content.firstElementChild.addEventListener("click", () => {
-            confirm("⚠️", this.i18n.confirmRemove.replace("${name}", this.name), () => {
-                this.removeData(STORAGE_NAME).then(() => {
-                    this.data[STORAGE_NAME] = { readonlyText: "Readonly" };
-                    showMessage(`[${this.name}]: ${this.i18n.removedData}`);
-                });
-            });
-        });
-        this.addStatusBar({
-            element: statusIconTemp.content.firstElementChild as HTMLElement,
-        });
-
-        this.addCommand({
-            langKey: "showDialog",
-            hotkey: "⇧⌘O",
+        this.addTopBar({
+            icon: "iconSaving",
+            title: "全量备份到alist",
+            position: "left",
             callback: () => {
-                this.showDialog();
-            },
-            fileTreeCallback: (file: any) => {
-                console.log(file, "fileTreeCallback");
-            },
-            editorCallback: (protyle: any) => {
-                console.log(protyle, "editorCallback");
-            },
-            dockCallback: (element: HTMLElement) => {
-                console.log(element, "dockCallback");
-            },
-        });
-        this.addCommand({
-            langKey: "getTab",
-            hotkey: "⇧⌘M",
-            globalCallback: () => {
-                console.log(this.getOpenedTab());
-            },
-        });
-
-        this.addDock({
-            config: {
-                position: "LeftBottom",
-                size: { width: 200, height: 0 },
-                icon: "iconSaving",
-                title: "Custom Dock",
-                hotkey: "⌥⌘W",
-            },
-            data: {
-                text: "This is my custom dock"
-            },
-            type: DOCK_TYPE,
-            resize() {
-                console.log(DOCK_TYPE + " resize");
-            },
-            update() {
-                console.log(DOCK_TYPE + " update");
-            },
-            init: (dock) => {
-                if (this.isMobile) {
-                    dock.element.innerHTML = `<div class="toolbar toolbar--border toolbar--dark">
-                    <svg class="toolbar__icon"><use xlink:href="#iconEmoji"></use></svg>
-                        <div class="toolbar__text">Custom Dock</div>
-                    </div>
-                    <div class="fn__flex-1 plugin-sample__custom-dock">
-                        ${dock.data.text}
-                    </div>
-                    </div>`;
-                } else {
-                    dock.element.innerHTML = `<div class="fn__flex-1 fn__flex-column">
-                    <div class="block__icons">
-                        <div class="block__logo">
-                            <svg class="block__logoicon"><use xlink:href="#iconEmoji"></use></svg>
-                            Custom Dock
-                        </div>
-                        <span class="fn__flex-1 fn__space"></span>
-                        <span data-type="min" class="block__icon b3-tooltips b3-tooltips__sw" aria-label="Min ${adaptHotkey("⌘W")}"><svg class="block__logoicon"><use xlink:href="#iconMin"></use></svg></span>
-                    </div>
-                    <div class="fn__flex-1 plugin-sample__custom-dock">
-                        ${dock.data.text}
-                    </div>
-                    </div>`;
-                }
-            },
-            destroy() {
-                console.log("destroy dock:", DOCK_TYPE);
+                let rect = document.querySelector("#plugin_siyuan-plugin-link_1").getBoundingClientRect();
+                this.addMenu2(rect);
+                // this.runbackup();
+                // showMessage("处理中...");
             }
         });
+        //图标相关设置
 
+        //命令面板选项相关设置
+        // this.addCommand({
+        //     langKey: "chuan",
+        //     hotkey: "",
+        //     globalCallback: () => {
+        //         console.log('dd');
+        //     },
+        // });
+        //命令面板选项相关设置
+
+        //插件设置相关
         this.settingUtils = new SettingUtils({
             plugin: this, name: STORAGE_NAME
         });
         this.settingUtils.addItem({
-            key: "Input",
+            key: "sykey",
             value: "",
             type: "textinput",
-            title: "Readonly text",
-            description: "Input description",
+            title: "目标源密钥1",
+            description: "要接收数据的目标源密钥1",
             action: {
                 // Called when focus is lost and content changes
-                callback: () => {
+                callback: async () => {
                     // Return data and save it in real time
-                    let value = this.settingUtils.takeAndSave("Input");
-                    console.log(value);
+                    let value = await this.settingUtils.takeAndSave("sykey");
+                    token = value;
+                    // console.log(value);
                 }
             }
         });
         this.settingUtils.addItem({
-            key: "InputArea",
+            key: "syurl",
             value: "",
-            type: "textarea",
-            title: "Readonly text",
-            description: "Input description",
-            // Called when focus is lost and content changes
+            type: "textinput",
+            title: "目标源网址1",
+            description: "要接收数据的目标源的网址1",
             action: {
-                callback: () => {
-                    // Read data in real time
-                    let value = this.settingUtils.take("InputArea");
-                    console.log(value);
+                // Called when focus is lost and content changes
+                callback: async () => {
+                    // Return data and save it in real time
+                    let value = await this.settingUtils.takeAndSave("syurl");
+                    url = value;
+                    // console.log(value);
                 }
             }
         });
         this.settingUtils.addItem({
-            key: "Check",
-            value: true,
-            type: "checkbox",
-            title: "Checkbox text",
-            description: "Check description",
+            key: "sykey2",
+            value: "",
+            type: "textinput",
+            title: "目标源密钥2",
+            description: "要接收数据的目标源密钥2",
             action: {
-                callback: () => {
+                // Called when focus is lost and content changes
+                callback: async () => {
                     // Return data and save it in real time
-                    let value = !this.settingUtils.get("Check");
-                    this.settingUtils.set("Check", value);
-                    console.log(value);
+                    let value = await this.settingUtils.takeAndSave("sykey");
+                    token = value;
+                    // console.log(value);
+                }
+            }
+        });
+        this.settingUtils.addItem({
+            key: "syurl2",
+            value: "",
+            type: "textinput",
+            title: "目标源网址2",
+            description: "要接收数据的目标源的网址2",
+            action: {
+                // Called when focus is lost and content changes
+                callback: async () => {
+                    // Return data and save it in real time
+                    let value = await this.settingUtils.takeAndSave("syurl");
+                    url = value;
+                    // console.log(value);
                 }
             }
         });
@@ -216,81 +195,170 @@ export default class PluginSample extends Plugin {
             key: "Select",
             value: 1,
             type: "select",
-            title: "Select",
-            description: "Select description",
+            title: "目标源",
+            description: "选择目标源",
             options: {
-                1: "Option 1",
-                2: "Option 2"
+                1: "目标源1",
+                2: "目标源2"
             },
             action: {
-                callback: () => {
+                callback: async () => {
                     // Read data in real time
-                    let value = this.settingUtils.take("Select");
-                    console.log(value);
+                    let value = await this.settingUtils.takeAndSave("Select");
+                    serNum = value;
+                    console.log(serNum);
+                    if (serNum == "1") {
+                        url = this.settingUtils.get("syurl");
+                        token = this.settingUtils.get("sykey");
+                    } else if (serNum == "2") {
+                        url = this.settingUtils.get("syurl2");
+                        token = this.settingUtils.get("sykey2");
+                    }
+                    outLog(url,"当前目标源地址");
                 }
             }
         });
         this.settingUtils.addItem({
-            key: "Slider",
-            value: 50,
-            type: "slider",
-            title: "Slider text",
-            description: "Slider description",
-            direction: "column",
-            slider: {
-                min: 0,
-                max: 100,
-                step: 1,
-            },
-            action:{
-                callback: () => {
-                    // Read data in real time
-                    let value = this.settingUtils.take("Slider");
-                    console.log(value);
-                }
-            }
-        });
-        this.settingUtils.addItem({
-            key: "Btn",
+            key: "isconnect",
             value: "",
             type: "button",
-            title: "Button",
-            description: "Button description",
+            title: "验证服务连接",
+            description: "判断是否连接上目标服务和alist服务",
             button: {
-                label: "Button",
+                label: "验证",
                 callback: () => {
-                    showMessage("Button clicked");
+                    showMessage("正在验证...");
+                    isconnect();
+                    if(alistUrl!=""){
+                    checkAlistConnection(alistname, alistmima);
+                    }else{
+                        showMessage("未配置备份地址",2000);
+                    }
                 }
             }
         });
         this.settingUtils.addItem({
-            key: "Custom Element",
+            key: "push",
             value: "",
-            type: "custom",
-            direction: "row",
-            title: "Custom Element",
-            description: "Custom Element description",
-            //Any custom element must offer the following methods
-            createElement: (currentVal: any) => {
-                let div = document.createElement('div');
-                div.style.border = "1px solid var(--b3-theme-primary)";
-                div.contentEditable = "true";
-                div.textContent = currentVal;
-                return div;
-            },
-            getEleVal: (ele: HTMLElement) => {
-                return ele.textContent;
-            },
-            setEleVal: (ele: HTMLElement, val: any) => {
-                ele.textContent = val;
+            type: "button",
+            title: "全量传输",
+            description: "全量传输当前data",
+            button: {
+                label: "传输",
+                callback: () => {
+                    showMessage("正在传输...");
+                    this.runpush();
+                }
             }
         });
         this.settingUtils.addItem({
-            key: "Hint",
+            key: "pull",
             value: "",
-            type: "hint",
-            title: this.i18n.hintTitle,
-            description: this.i18n.hintDesc,
+            type: "button",
+            title: "全量拉取",
+            description: "全量拉取目标服务data",
+            button: {
+                label: "拉取",
+                callback: () => {
+                    showMessage("正在拉取...");
+                    this.runpull();
+                }
+            }
+        });
+        this.settingUtils.addItem({
+            key: "islog",
+            value: Boolean,
+            type: "checkbox",
+            title: "是否日志输出",
+            description: "控制本插件日志是否输出到控制台",
+            action: {
+                callback: () => {
+                    // Return data and save it in real time
+                    let value = !this.settingUtils.get("islog");
+                    this.settingUtils.set("islog", value);
+                    trunLog(value);
+                    outLog(value);
+                }
+            }
+        });
+        this.settingUtils.addItem({
+            key: "readonlyText",
+            value: Boolean,
+            type: "checkbox",
+            title: "是否只读标记",
+            description: "控制是否在传输时对笔记内容进行只读标记",
+            action: {
+                callback: () => {
+                    // Return data and save it in real time
+                    let value = !this.settingUtils.get("readonlyText");
+                    this.settingUtils.set("readonlyText", value);
+                }
+            }
+        });
+        this.settingUtils.addItem({
+            key: "alistUrl",
+            value: "",
+            type: "textinput",
+            title: "alist服务地址",
+            description: "备份到alist的服务地址",
+            action: {
+                // Called when focus is lost and content changes
+                callback: async () => {
+                    // Return data and save it in real time
+                    let value = await this.settingUtils.takeAndSave("alistUrl");
+                    alistUrl = value;
+                    // console.log(value);
+                }
+            }
+        });
+        this.settingUtils.addItem({
+            key: "alistname",
+            value: "",
+            type: "textinput",
+            title: "alist用户名",
+            description: "备份到alist的用户名",
+            action: {
+                // Called when focus is lost and content changes
+                callback: async () => {
+                    // Return data and save it in real time
+                    let value = await this.settingUtils.takeAndSave("alistname");
+                    alistname = value;
+                    // console.log(value);
+                }
+            }
+        });
+        this.settingUtils.addItem({
+            key: "alistToken",
+            value: "",
+            type: "textinput",
+            title: "alist密码",
+            description: "备份到alist的密码",
+            action: {
+                // Called when focus is lost and content changes
+                callback: async () => {
+                    // Return data and save it in real time
+                    let value = await this.settingUtils.takeAndSave("alistToken");
+                    alistmima = value;
+                    // console.log(value);
+                }
+            }
+        });
+
+        this.settingUtils.addItem({
+            key: "alistToPath",
+            value: "",
+            type: "textinput",
+            title: "备份路径",
+            description: "备份到alist的路径和文件名",
+            action: {
+                // Called when focus is lost and content changes
+                callback: async () => {
+                    // Return data and save it in real time
+                    let value = await this.settingUtils.takeAndSave("alistToPath");
+                    alistToPath = value;
+                    // console.log(value);
+                }
+            }
         });
 
         try {
@@ -298,63 +366,91 @@ export default class PluginSample extends Plugin {
         } catch (error) {
             console.error("Error loading settings storage, probably empty config json:", error);
         }
-
-
-        this.protyleSlash = [{
-            filter: ["insert emoji 😊", "插入表情 😊", "crbqwx"],
-            html: `<div class="b3-list-item__first"><span class="b3-list-item__text">${this.i18n.insertEmoji}</span><span class="b3-list-item__meta">😊</span></div>`,
-            id: "insertEmoji",
-            callback(protyle: Protyle) {
-                protyle.insert("😊");
-            }
-        }];
-
-        this.protyleOptions = {
-            toolbar: ["block-ref",
-                "a",
-                "|",
-                "text",
-                "strong",
-                "em",
-                "u",
-                "s",
-                "mark",
-                "sup",
-                "sub",
-                "clear",
-                "|",
-                "code",
-                "kbd",
-                "tag",
-                "inline-math",
-                "inline-memo",
-                "|",
-                {
-                    name: "insert-smail-emoji",
-                    icon: "iconEmoji",
-                    hotkey: "⇧⌘I",
-                    tipPosition: "n",
-                    tip: this.i18n.insertEmoji,
-                    click(protyle: Protyle) {
-                        protyle.insert("😊");
-                    }
-                }],
-        };
-
+        //插件设置相关
         console.log(this.i18n.helloPlugin);
     }
+    //选中菜单设置
+
+
+
+    private addMenu(rect?: DOMRect) {
+        //退出回调
+        const menu = new Menu("topBarSample", () => {
+            outLog(this.i18n.byeMenu);
+        });
+        //添加菜单项
+        menu.addItem({
+            icon: "iconDataTransferSimple",
+            label: "传输当前笔记",
+            click: () => {
+                if(url==""){
+                    showMessage("请先配置目标源地址！");
+                    return;
+                }
+                outLog("传输当前笔记");
+                this.run();
+                // this.dbug();
+            }
+        });
+        menu.open({
+            x: rect.right,
+            y: rect.bottom,
+            isLeft: true,
+        });
+    }
+
+    private addMenu2(rect?: DOMRect) {
+        //退出回调
+        const menu = new Menu("topBarSample2", () => {
+            outLog(this.i18n.byeMenu);
+        });
+        //添加菜单项
+        menu.addItem({
+            icon: "",
+            label: "备份data",
+            click: () => {
+                if(alistUrl==""){
+                    showMessage("请先配置备份地址！");
+                    return;
+                }
+                outLog("备份data");
+                this.runbackup();
+                // this.dbug();
+            }
+        });
+        menu.open({
+            x: rect.left,
+            y: rect.bottom,
+            isLeft: false,
+        });
+    }
+
+
+
 
     onLayoutReady() {
-        // this.loadData(STORAGE_NAME);
+
         this.settingUtils.load();
         console.log(`frontend: ${getFrontend()}; backend: ${getBackend()}`);
+        serNum = this.settingUtils.get("Select");
+        if (serNum == "1") {
+        url = this.settingUtils.get("syurl");
+        token = this.settingUtils.get("sykey");
+        } else if (serNum == "2") {
+            url = this.settingUtils.get("syurl2");
+            token = this.settingUtils.get("sykey2");
+        }        
+        outLog(url,"当前目标源地址");
+        alistmima = this.settingUtils.get("alistToken");
+        alistname = this.settingUtils.get("alistname");
+        alistUrl = this.settingUtils.get("alistUrl");
+        alistToPath = this.settingUtils.get("alistToPath");
+        outLog(alistUrl,"当前备份地址");
+        outLog(alistname,"当前备份用户名");
+        outLog(alistToPath,"当前备份路径");
+        trunLog(this.settingUtils.get("islog"));
+        outLog('cseffsddfsfdsfdfd');
 
-        console.log(
-            "Official settings value calling example:\n" +
-            this.settingUtils.get("InputArea") + "\n" +
-            this.settingUtils.get("Slider") + "\n" +
-            this.settingUtils.get("Select") + "\n"
-        );
 
         let tabDiv = document.createElement("div");
         new HelloExample({
@@ -376,8 +472,18 @@ export default class PluginSample extends Plugin {
                 console.log("destroy tab:", TAB_TYPE);
             }
         });
+
+        //获取当前文档ID
+        this.eventBus.on("switch-protyle", (event) => {
+            currentDocId = event.detail.protyle.block.id;
+            console.log("Current document ID:", currentDocId);
+        });
+        //获取当前文档ID
     }
 
+
+
+    //插件卸载相关
     async onunload() {
         console.log(this.i18n.byePlugin);
         showMessage("Goodbye SiYuan Plugin");
@@ -387,557 +493,100 @@ export default class PluginSample extends Plugin {
     uninstall() {
         console.log("uninstall");
     }
+    //插件卸载相关
 
-    async updateCards(options: ICardData) {
-        options.cards.sort((a: ICard, b: ICard) => {
-            if (a.blockID < b.blockID) {
-                return -1;
-            }
-            if (a.blockID > b.blockID) {
-                return 1;
-            }
-            return 0;
-        });
-        return options;
-    }
-
-    /**
-     * A custom setting pannel provided by svelte
-     */
-    openDIYSetting(): void {
-        let dialog = new Dialog({
-            title: "SettingPannel",
-            content: `<div id="SettingPanel" style="height: 100%;"></div>`,
-            width: "800px",
-            destroyCallback: (options) => {
-                console.log("destroyCallback", options);
-                //You'd better destroy the component when the dialog is closed
-                pannel.$destroy();
-            }
-        });
-        let pannel = new SettingExample({
-            target: dialog.element.querySelector("#SettingPanel"),
-        });
-    }
-
-    private eventBusPaste(event: any) {
-        // 如果需异步处理请调用 preventDefault， 否则会进行默认处理
-        event.preventDefault();
-        // 如果使用了 preventDefault，必须调用 resolve，否则程序会卡死
-        event.detail.resolve({
-            textPlain: event.detail.textPlain.trim(),
-        });
-    }
-
-    private eventBusLog({ detail }: any) {
-        console.log(detail);
-    }
-
-    private blockIconEvent({ detail }: any) {
-        detail.menu.addItem({
-            iconHTML: "",
-            label: this.i18n.removeSpace,
-            click: () => {
-                const doOperations: IOperation[] = [];
-                detail.blockElements.forEach((item: HTMLElement) => {
-                    const editElement = item.querySelector('[contenteditable="true"]');
-                    if (editElement) {
-                        editElement.textContent = editElement.textContent.replace(/ /g, "");
-                        doOperations.push({
-                            id: item.dataset.nodeId,
-                            data: item.outerHTML,
-                            action: "update"
-                        });
+    //写插件实现功能的函数
+    private async run() {
+        if (currentDocId) {
+            try {
+                showMessage("正在传输...",-1,"info","单笔记传输")
+                const notePath = await getCurrentNotePath(currentDocId);
+                outLog(notePath,"当前笔记路径");
+                //获取文字数据并保存
+                //是否标记只读
+                if (this.settingUtils.get("readonlyText")) {
+                    await putFileContent(notePath, await transferLockAndReadonly(await getNoteData(notePath)));
+                } else {
+                    await putFileContent(notePath, await getNoteData(notePath));
+                }
+                //处理数据库资源文件
+                handleDbResource(currentDocId);
+                //修改目标服务笔记配置
+                //0.0.6: 这里的notebookId可能是空的，导致无法修改笔记配置
+                await setNotebookConf(notebookId, await getNotebookName(notebookId));
+                //获取资源路径并下载
+                const links = await getmd(currentDocId);
+                if (links) {
+                    for (const link of links) {
+                        console.log(link);
+                        console.log('1');
+                        const imageData = await downloadImage(link);
+                        putFileContentM(link, imageData);
                     }
-                });
-                detail.protyle.getInstance().transaction(doOperations);
+                } else {
+                    showMessage("未发现资源文件附件");
+                    console.log("未发现资源文件附件");
+                }
+                //数据库文件处理
+                await refreshURL();
+            } catch (error) {
+                console.error("运行时发生错误:", error);
+                showMessage("运行时发生错误:" + error.message);
             }
-        });
-    }
-
-    private showDialog() {
-        // let dialog = new Dialog({
-        //     title: `SiYuan ${Constants.SIYUAN_VERSION}`,
-        //     content: `<div id="helloPanel" class="b3-dialog__content"></div>`,
-        //     width: this.isMobile ? "92vw" : "720px",
-        //     destroyCallback() {
-        //         // hello.$destroy();
-        //     },
-        // });
-        // new HelloExample({
-        //     target: dialog.element.querySelector("#helloPanel"),
-        //     props: {
-        //         app: this.app,
-        //     }
-        // });
-        svelteDialog({
-            title: `SiYuan ${Constants.SIYUAN_VERSION}`,
-            width: this.isMobile ? "92vw" : "720px",
-            constructor: (container: HTMLElement) => {
-                return new HelloExample({
-                    target: container,
-                    props: {
-                        app: this.app,
-                    }
-                });
-            }
-        });
-    }
-
-    private addMenu(rect?: DOMRect) {
-        const menu = new Menu("topBarSample", () => {
-            console.log(this.i18n.byeMenu);
-        });
-        menu.addItem({
-            icon: "iconInfo",
-            label: "Dialog(open help first)",
-            accelerator: this.commands[0].customHotkey,
-            click: () => {
-                this.showDialog();
-            }
-        });
-        if (!this.isMobile) {
-            menu.addItem({
-                icon: "iconFace",
-                label: "Open Custom Tab",
-                click: () => {
-                    const tab = openTab({
-                        app: this.app,
-                        custom: {
-                            icon: "iconFace",
-                            title: "Custom Tab",
-                            data: {
-                                text: "This is my custom tab",
-                            },
-                            id: this.name + TAB_TYPE
-                        },
-                    });
-                    console.log(tab);
-                }
-            });
-            menu.addItem({
-                icon: "iconImage",
-                label: "Open Asset Tab(open help first)",
-                click: () => {
-                    const tab = openTab({
-                        app: this.app,
-                        asset: {
-                            path: "assets/paragraph-20210512165953-ag1nib4.svg"
-                        }
-                    });
-                    console.log(tab);
-                }
-            });
-            menu.addItem({
-                icon: "iconFile",
-                label: "Open Doc Tab(open help first)",
-                click: async () => {
-                    const tab = await openTab({
-                        app: this.app,
-                        doc: {
-                            id: "20200812220555-lj3enxa",
-                        }
-                    });
-                    console.log(tab);
-                }
-            });
-            menu.addItem({
-                icon: "iconSearch",
-                label: "Open Search Tab",
-                click: () => {
-                    const tab = openTab({
-                        app: this.app,
-                        search: {
-                            k: "SiYuan"
-                        }
-                    });
-                    console.log(tab);
-                }
-            });
-            menu.addItem({
-                icon: "iconRiffCard",
-                label: "Open Card Tab",
-                click: () => {
-                    const tab = openTab({
-                        app: this.app,
-                        card: {
-                            type: "all"
-                        }
-                    });
-                    console.log(tab);
-                }
-            });
-            menu.addItem({
-                icon: "iconLayout",
-                label: "Open Float Layer(open help first)",
-                click: () => {
-                    this.addFloatLayer({
-                        ids: ["20210428212840-8rqwn5o", "20201225220955-l154bn4"],
-                        defIds: ["20230415111858-vgohvf3", "20200813131152-0wk5akh"],
-                        x: window.innerWidth - 768 - 120,
-                        y: 32
-                    });
-                }
-            });
-            menu.addItem({
-                icon: "iconOpenWindow",
-                label: "Open Doc Window(open help first)",
-                click: () => {
-                    openWindow({
-                        doc: {id: "20200812220555-lj3enxa"}
-                    });
-                }
-            });
-        } else {
-            menu.addItem({
-                icon: "iconFile",
-                label: "Open Doc(open help first)",
-                click: () => {
-                    openMobileFileById(this.app, "20200812220555-lj3enxa");
-                }
-            });
-        }
-        menu.addItem({
-            icon: "iconLock",
-            label: "Lockscreen",
-            click: () => {
-                lockScreen(this.app);
-            }
-        });
-        menu.addItem({
-            icon: "iconScrollHoriz",
-            label: "Event Bus",
-            type: "submenu",
-            submenu: [{
-                icon: "iconSelect",
-                label: "On ws-main",
-                click: () => {
-                    this.eventBus.on("ws-main", this.eventBusLog);
-                }
-            }, {
-                icon: "iconClose",
-                label: "Off ws-main",
-                click: () => {
-                    this.eventBus.off("ws-main", this.eventBusLog);
-                }
-            }, {
-                icon: "iconSelect",
-                label: "On click-blockicon",
-                click: () => {
-                    this.eventBus.on("click-blockicon", this.blockIconEventBindThis);
-                }
-            }, {
-                icon: "iconClose",
-                label: "Off click-blockicon",
-                click: () => {
-                    this.eventBus.off("click-blockicon", this.blockIconEventBindThis);
-                }
-            }, {
-                icon: "iconSelect",
-                label: "On click-pdf",
-                click: () => {
-                    this.eventBus.on("click-pdf", this.eventBusLog);
-                }
-            }, {
-                icon: "iconClose",
-                label: "Off click-pdf",
-                click: () => {
-                    this.eventBus.off("click-pdf", this.eventBusLog);
-                }
-            }, {
-                icon: "iconSelect",
-                label: "On click-editorcontent",
-                click: () => {
-                    this.eventBus.on("click-editorcontent", this.eventBusLog);
-                }
-            }, {
-                icon: "iconClose",
-                label: "Off click-editorcontent",
-                click: () => {
-                    this.eventBus.off("click-editorcontent", this.eventBusLog);
-                }
-            }, {
-                icon: "iconSelect",
-                label: "On click-editortitleicon",
-                click: () => {
-                    this.eventBus.on("click-editortitleicon", this.eventBusLog);
-                }
-            }, {
-                icon: "iconClose",
-                label: "Off click-editortitleicon",
-                click: () => {
-                    this.eventBus.off("click-editortitleicon", this.eventBusLog);
-                }
-            }, {
-                icon: "iconSelect",
-                label: "On click-flashcard-action",
-                click: () => {
-                    this.eventBus.on("click-flashcard-action", this.eventBusLog);
-                }
-            }, {
-                icon: "iconClose",
-                label: "Off click-flashcard-action",
-                click: () => {
-                    this.eventBus.off("click-flashcard-action", this.eventBusLog);
-                }
-            }, {
-                icon: "iconSelect",
-                label: "On open-noneditableblock",
-                click: () => {
-                    this.eventBus.on("open-noneditableblock", this.eventBusLog);
-                }
-            }, {
-                icon: "iconClose",
-                label: "Off open-noneditableblock",
-                click: () => {
-                    this.eventBus.off("open-noneditableblock", this.eventBusLog);
-                }
-            }, {
-                icon: "iconSelect",
-                label: "On loaded-protyle-static",
-                click: () => {
-                    this.eventBus.on("loaded-protyle-static", this.eventBusLog);
-                }
-            }, {
-                icon: "iconClose",
-                label: "Off loaded-protyle-static",
-                click: () => {
-                    this.eventBus.off("loaded-protyle-static", this.eventBusLog);
-                }
-            }, {
-                icon: "iconSelect",
-                label: "On loaded-protyle-dynamic",
-                click: () => {
-                    this.eventBus.on("loaded-protyle-dynamic", this.eventBusLog);
-                }
-            }, {
-                icon: "iconClose",
-                label: "Off loaded-protyle-dynamic",
-                click: () => {
-                    this.eventBus.off("loaded-protyle-dynamic", this.eventBusLog);
-                }
-            }, {
-                icon: "iconSelect",
-                label: "On switch-protyle",
-                click: () => {
-                    this.eventBus.on("switch-protyle", this.eventBusLog);
-                }
-            }, {
-                icon: "iconClose",
-                label: "Off switch-protyle",
-                click: () => {
-                    this.eventBus.off("switch-protyle", this.eventBusLog);
-                }
-            }, {
-                icon: "iconSelect",
-                label: "On destroy-protyle",
-                click: () => {
-                    this.eventBus.on("destroy-protyle", this.eventBusLog);
-                }
-            }, {
-                icon: "iconClose",
-                label: "Off destroy-protyle",
-                click: () => {
-                    this.eventBus.off("destroy-protyle", this.eventBusLog);
-                }
-            }, {
-                icon: "iconSelect",
-                label: "On open-menu-doctree",
-                click: () => {
-                    this.eventBus.on("open-menu-doctree", this.eventBusLog);
-                }
-            }, {
-                icon: "iconClose",
-                label: "Off open-menu-doctree",
-                click: () => {
-                    this.eventBus.off("open-menu-doctree", this.eventBusLog);
-                }
-            }, {
-                icon: "iconSelect",
-                label: "On open-menu-blockref",
-                click: () => {
-                    this.eventBus.on("open-menu-blockref", this.eventBusLog);
-                }
-            }, {
-                icon: "iconClose",
-                label: "Off open-menu-blockref",
-                click: () => {
-                    this.eventBus.off("open-menu-blockref", this.eventBusLog);
-                }
-            }, {
-                icon: "iconSelect",
-                label: "On open-menu-fileannotationref",
-                click: () => {
-                    this.eventBus.on("open-menu-fileannotationref", this.eventBusLog);
-                }
-            }, {
-                icon: "iconClose",
-                label: "Off open-menu-fileannotationref",
-                click: () => {
-                    this.eventBus.off("open-menu-fileannotationref", this.eventBusLog);
-                }
-            }, {
-                icon: "iconSelect",
-                label: "On open-menu-tag",
-                click: () => {
-                    this.eventBus.on("open-menu-tag", this.eventBusLog);
-                }
-            }, {
-                icon: "iconClose",
-                label: "Off open-menu-tag",
-                click: () => {
-                    this.eventBus.off("open-menu-tag", this.eventBusLog);
-                }
-            }, {
-                icon: "iconSelect",
-                label: "On open-menu-link",
-                click: () => {
-                    this.eventBus.on("open-menu-link", this.eventBusLog);
-                }
-            }, {
-                icon: "iconClose",
-                label: "Off open-menu-link",
-                click: () => {
-                    this.eventBus.off("open-menu-link", this.eventBusLog);
-                }
-            }, {
-                icon: "iconSelect",
-                label: "On open-menu-image",
-                click: () => {
-                    this.eventBus.on("open-menu-image", this.eventBusLog);
-                }
-            }, {
-                icon: "iconClose",
-                label: "Off open-menu-image",
-                click: () => {
-                    this.eventBus.off("open-menu-image", this.eventBusLog);
-                }
-            }, {
-                icon: "iconSelect",
-                label: "On open-menu-av",
-                click: () => {
-                    this.eventBus.on("open-menu-av", this.eventBusLog);
-                }
-            }, {
-                icon: "iconClose",
-                label: "Off open-menu-av",
-                click: () => {
-                    this.eventBus.off("open-menu-av", this.eventBusLog);
-                }
-            }, {
-                icon: "iconSelect",
-                label: "On open-menu-content",
-                click: () => {
-                    this.eventBus.on("open-menu-content", this.eventBusLog);
-                }
-            }, {
-                icon: "iconClose",
-                label: "Off open-menu-content",
-                click: () => {
-                    this.eventBus.off("open-menu-content", this.eventBusLog);
-                }
-            }, {
-                icon: "iconSelect",
-                label: "On open-menu-breadcrumbmore",
-                click: () => {
-                    this.eventBus.on("open-menu-breadcrumbmore", this.eventBusLog);
-                }
-            }, {
-                icon: "iconClose",
-                label: "Off open-menu-breadcrumbmore",
-                click: () => {
-                    this.eventBus.off("open-menu-breadcrumbmore", this.eventBusLog);
-                }
-            }, {
-                icon: "iconSelect",
-                label: "On open-menu-inbox",
-                click: () => {
-                    this.eventBus.on("open-menu-inbox", this.eventBusLog);
-                }
-            }, {
-                icon: "iconClose",
-                label: "Off open-menu-inbox",
-                click: () => {
-                    this.eventBus.off("open-menu-inbox", this.eventBusLog);
-                }
-            }, {
-                icon: "iconSelect",
-                label: "On input-search",
-                click: () => {
-                    this.eventBus.on("input-search", this.eventBusLog);
-                }
-            }, {
-                icon: "iconClose",
-                label: "Off input-search",
-                click: () => {
-                    this.eventBus.off("input-search", this.eventBusLog);
-                }
-            }, {
-                icon: "iconSelect",
-                label: "On paste",
-                click: () => {
-                    this.eventBus.on("paste", this.eventBusPaste);
-                }
-            }, {
-                icon: "iconClose",
-                label: "Off paste",
-                click: () => {
-                    this.eventBus.off("paste", this.eventBusPaste);
-                }
-            }, {
-                icon: "iconSelect",
-                label: "On open-siyuan-url-plugin",
-                click: () => {
-                    this.eventBus.on("open-siyuan-url-plugin", this.eventBusLog);
-                }
-            }, {
-                icon: "iconClose",
-                label: "Off open-siyuan-url-plugin",
-                click: () => {
-                    this.eventBus.off("open-siyuan-url-plugin", this.eventBusLog);
-                }
-            }, {
-                icon: "iconSelect",
-                label: "On open-siyuan-url-block",
-                click: () => {
-                    this.eventBus.on("open-siyuan-url-block", this.eventBusLog);
-                }
-            }, {
-                icon: "iconClose",
-                label: "Off open-siyuan-url-block",
-                click: () => {
-                    this.eventBus.off("open-siyuan-url-block", this.eventBusLog);
-                }
-            }]
-        });
-        menu.addSeparator();
-        menu.addItem({
-            icon: "iconSettings",
-            label: "Official Setting Dialog",
-            click: () => {
-                this.openSetting();
-            }
-        });
-        menu.addItem({
-            icon: "iconSettings",
-            label: "A custom setting dialog (by svelte)",
-            click: () => {
-                this.openDIYSetting();
-            }
-        });
-        menu.addItem({
-            icon: "iconSparkles",
-            label: this.data[STORAGE_NAME].readonlyText || "Readonly",
-            type: "readonly",
-        });
-        if (this.isMobile) {
-            menu.fullscreen();
-        } else {
-            menu.open({
-                x: rect.right,
-                y: rect.bottom,
-                isLeft: true,
-            });
+            showMessage("传输结束!",6000,"info","单笔记传输")
         }
     }
+
+
+
+    // private async dbug() {
+    //     console.log('dbug');
+    // }
+
+    //全量传输
+    private async runpush() {
+        showMessage("正在传输...",-1,"info","传输")
+        outLog('runpush');
+        try {
+            const link = await exportAllDataPath();
+            // const data = await downloadImage(link);
+            await importAllDataURL(await downloadImage(link));
+        } catch (error) {
+            showMessage("传输失败!",-1,"error","传输")
+            console.error('Failed to run runpush:', error);
+        }
+        showMessage("传输结束!",6000,"info","传输")
+    }
+
+    //全量拉取
+    private async runpull() {
+        showMessage("正在拉取...",-1,"info","拉取")
+        outLog('runpull');
+        try {
+            const link = await exportAllDataPathURL();
+            // const data = await downloadImage(link);
+            await importAllData(await downloadImageURL(link));
+        } catch (error) {
+            showMessage("拉取失败!",-1,"error","拉取")
+            console.error('Failed to run runpull:', error);
+        }
+        showMessage("拉取结束!",6000,"info","拉取")
+    }
+
+    private async runbackup() {
+        showMessage("正在备份...",-1,"info","备份")
+        outLog('runbackup');
+        try {
+        const link = await exportAllDataPath();
+        // const data = await downloadImageURL(link);
+        const data = await downloadImage(link);
+        await uploadToAList(data,alistToPath);
+        } catch (error) {
+            showMessage("备份失败!",-1,"error","备份")
+            console.error('Failed to run runbackup:', error);
+        }
+        showMessage("备份结束!",6000,"info","备份")
+    }
+
 }
+
