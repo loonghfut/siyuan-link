@@ -842,8 +842,14 @@ export async function uploadToAList(blob, filePath) {
         // 检查响应并返回结果
         console.log(file.name, "asdas");
         if (response.status === 200) {
+            const result  = await response.json();
+            if(result.code === 200){
             showMessage('备份到alist成功', 6000, 'info', '备份到AList');
             console.log("Upload successful.");
+            } else {
+                showMessage('备份到AList失败:'+ result.message, -1, 'error', '备份到AList');
+                console.log(`Upload failed. Status code: ${response.status} - Message: ${result.message}`);
+            }
         } else {
             showMessage('备份到AList失败:'+ await response.text(), -1, 'error', '备份到AList');
             console.log(`Upload failed. Status code: ${response.status} - Message: ${await response.text()}`);

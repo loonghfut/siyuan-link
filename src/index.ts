@@ -6,6 +6,7 @@ import {
     getBackend,
     IModel,
     Menu,
+    confirm,
 } from "siyuan";
 import "@/index.scss";
 // import * as api from "@/api"
@@ -43,22 +44,29 @@ import { SettingUtils } from "./libs/setting-utils";
 
 const STORAGE_NAME = "menu-config";
 const TAB_TYPE = "custom_tab";
+const DOCK_TYPE = "dock_tab";//之后列出目标服务笔记列表
+
 
 export let currentDocId: string | null = null;
 export let url: string | null = null;
 export let token: string | null = null;
 export let serNum: string | null = null;
+//alist相关设置  
 export let alistname: string | null = null;
 export let alistmima: string | null = null;
 export let alistUrl: string | null = null;
 export let alistToPath: string | null = null;
+export let alistFilename: string | null = null;
 // let notePath: string | null = null;
-export default class PluginSample extends Plugin {
+export default class SiYuanLink extends Plugin {
 
     customTab: () => IModel;
     private settingUtils: SettingUtils;
-
+    private isMobile: boolean;
     async onload() {
+        const frontEnd = getFrontend();
+        this.isMobile = frontEnd === "mobile" || frontEnd === "browser-mobile";
+        console.log(frontEnd, this.isMobile);
         this.data[STORAGE_NAME] = { readonlyText: "Readon" };
         // 图标的制作参见帮助文档
         //图标相关设置
@@ -66,8 +74,8 @@ export default class PluginSample extends Plugin {
         this.addIcons(`<symbol id="iconTransfer" viewBox="0 0 32 32">
 <path d="M27.414 19.414l-4-4c-0.781-0.781-2.047-0.781-2.828 0s-0.781 2.047 0 2.828l1.586 1.586h-12.172c-1.105 0-2 0.895-2 2s0.895 2 2 2h12.172l-1.586 1.586c-0.781 0.781-0.781 2.047 0 2.828 0.39 0.39 0.902 0.586 1.414 0.586s1.024-0.195 1.414-0.586l4-4c0.781-0.781 0.781-2.047 0-2.828zM10.586 10.586l-4 4c-0.781 0.781-0.781 2.047 0 2.828 0.39 0.39 0.902 0.586 1.414 0.586s1.024-0.195 1.414-0.586l1.586-1.586h12.172c1.105 0 2-0.895 2-2s-0.895-2-2-2h-12.172l1.586-1.586c0.781-0.781 0.781-2.047 0-2.828s-2.047-0.781-2.828 0l-4 4c-0.781 0.781-0.781 2.047 0 2.828z"></path>
 </symbol>
-<symbol id="iconSaving" viewBox="0 0 32 32">
-<path d="M20 13.333c0-0.733 0.6-1.333 1.333-1.333s1.333 0.6 1.333 1.333c0 0.733-0.6 1.333-1.333 1.333s-1.333-0.6-1.333-1.333zM10.667 12h6.667v-2.667h-6.667v2.667zM29.333 10v9.293l-3.76 1.253-2.24 7.453h-7.333v-2.667h-2.667v2.667h-7.333c0 0-3.333-11.28-3.333-15.333s3.28-7.333 7.333-7.333h6.667c1.213-1.613 3.147-2.667 5.333-2.667 1.107 0 2 0.893 2 2 0 0.28-0.053 0.533-0.16 0.773-0.187 0.453-0.347 0.973-0.427 1.533l3.027 3.027h2.893zM26.667 12.667h-1.333l-4.667-4.667c0-0.867 0.12-1.72 0.347-2.547-1.293 0.333-2.347 1.293-2.787 2.547h-8.227c-2.573 0-4.667 2.093-4.667 4.667 0 2.507 1.627 8.867 2.68 12.667h2.653v-2.667h8v2.667h2.68l2.067-6.867 3.253-1.093v-4.707z"></path>
+<symbol id="iconSaving"  viewBox="0 0 32 32">
+  <path d="M28 22h-24c-1.105 0-2-0.895-2-2v-12c0-1.105 0.895-2 2-2h24c1.105 0 2 0.895 2 2v12c0 1.105-0.895 2-2 2zM4 8v12h24v-12h-24zM16 18l-6-6h4v-4h4v4h4l-6 6zM26 24h-20c-1.105 0-2-0.895-2-2v-2h24v2c0 1.105-0.895 2-2 2z"></path>
 </symbol>
 <symbol id="iconDataTransferSimple" viewBox="0 0 32 32">
 <path d="M4 16h24M16 4v24M4 16l8-8 8 8"/>
@@ -82,12 +90,12 @@ export default class PluginSample extends Plugin {
 <path d="M16 4h-2v24h2zM4 16h24M16 4l8 8-8 8zM8 8h16M24 24h-16"/>
 </symbol>
 `);
-        
+
 
         //添加图标
         this.addTopBar({
             icon: "iconTransfer",
-            title: this.i18n.addTopBarIcon,
+            title: "数据传输",
             position: "right",
             callback: () => {
                 // console.log("TopBar Icon Clicked");
@@ -111,13 +119,17 @@ export default class PluginSample extends Plugin {
                 // showMessage("处理中...");
             }
         });
-        //图标相关设置
+
 
         //命令面板选项相关设置
         // this.addCommand({
         //     langKey: "chuan",
         //     hotkey: "",
         //     globalCallback: () => {
+        //         confirm("你好，欢迎使用SiYuanLink插件！", "SiYuanLink插件", () => {
+        //             showMessage("你好，欢迎使用2222222SiYuanLink插件！");
+        //         });
+
         //         console.log('dd');
         //     },
         // });
@@ -214,7 +226,7 @@ export default class PluginSample extends Plugin {
                         url = this.settingUtils.get("syurl2");
                         token = this.settingUtils.get("sykey2");
                     }
-                    outLog(url,"当前目标源地址");
+                    outLog(url, "当前目标源地址");
                 }
             }
         });
@@ -229,10 +241,10 @@ export default class PluginSample extends Plugin {
                 callback: () => {
                     showMessage("正在验证...");
                     isconnect();
-                    if(alistUrl!=""){
-                    checkAlistConnection(alistname, alistmima);
-                    }else{
-                        showMessage("未配置备份地址",2000);
+                    if (alistUrl != "") {
+                        checkAlistConnection(alistname, alistmima);
+                    } else {
+                        showMessage("未配置备份地址", 2000);
                     }
                 }
             }
@@ -349,13 +361,29 @@ export default class PluginSample extends Plugin {
             value: "",
             type: "textinput",
             title: "备份路径",
-            description: "备份到alist的路径和文件名",
+            description: "备份到alist的路径",
             action: {
                 // Called when focus is lost and content changes
                 callback: async () => {
                     // Return data and save it in real time
                     let value = await this.settingUtils.takeAndSave("alistToPath");
                     alistToPath = value;
+                    // console.log(value);
+                }
+            }
+        });
+        this.settingUtils.addItem({
+            key: "alistFilename",
+            value: "",
+            type: "textinput",
+            title: "默认备份文件名",
+            description: "备份到alist的默认文件名(注意要加后缀名eg:siyuan-backup.zip)",
+            action: {
+                // Called when focus is lost and content changes
+                callback: async () => {
+                    // Return data and save it in real time
+                    let value = await this.settingUtils.takeAndSave("alistFilename");
+                    alistFilename = value;
                     // console.log(value);
                 }
             }
@@ -383,7 +411,7 @@ export default class PluginSample extends Plugin {
             icon: "iconDataTransferSimple",
             label: "传输当前笔记",
             click: () => {
-                if(url==""){
+                if (url == "") {
                     showMessage("请先配置目标源地址！");
                     return;
                 }
@@ -409,12 +437,40 @@ export default class PluginSample extends Plugin {
             icon: "",
             label: "备份data",
             click: () => {
-                if(alistUrl==""){
+                if (alistUrl == "") {
                     showMessage("请先配置备份地址！");
                     return;
                 }
-                outLog("备份data");
-                this.runbackup();
+                confirm("请给备份文件取个名字 ^_^", `<style>
+        #alistFilename {
+            width: 100%;
+            padding: 4px;
+            color: #fff; /* 设置文字为白色 */
+            background-color: #333; /* 设置背景颜色为深色 */
+            border: 1px solid #007BFF;
+            border-radius: 4px;
+            font-size: 14px;
+            outline: none;
+        }
+        #alistFilename:focus {
+            border-color: #007BFF;
+            box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+        }
+    </style>
+    文件名: <input type="text" id="alistFilename" value="${alistFilename}">`, () => {
+                    const inputElement = document.getElementById("alistFilename") as HTMLInputElement;
+                    const inputValue = inputElement.value;
+                    if (inputValue) {
+                        outLog("正在备份..." + inputValue);
+                        outLog("备份data");
+                        this.runbackup(inputValue);
+                    } else {
+                        showMessage("没有输入文件名，备份取消。");
+                        return;
+                    }
+                });
+
+                // this.runbackup();
                 // this.dbug();
             }
         });
@@ -434,20 +490,22 @@ export default class PluginSample extends Plugin {
         console.log(`frontend: ${getFrontend()}; backend: ${getBackend()}`);
         serNum = this.settingUtils.get("Select");
         if (serNum == "1") {
-        url = this.settingUtils.get("syurl");
-        token = this.settingUtils.get("sykey");
+            url = this.settingUtils.get("syurl");
+            token = this.settingUtils.get("sykey");
         } else if (serNum == "2") {
             url = this.settingUtils.get("syurl2");
             token = this.settingUtils.get("sykey2");
-        }        
-        outLog(url,"当前目标源地址");
+        }
+        outLog(url, "当前目标源地址");
         alistmima = this.settingUtils.get("alistToken");
         alistname = this.settingUtils.get("alistname");
         alistUrl = this.settingUtils.get("alistUrl");
         alistToPath = this.settingUtils.get("alistToPath");
-        outLog(alistUrl,"当前备份地址");
-        outLog(alistname,"当前备份用户名");
-        outLog(alistToPath,"当前备份路径");
+        alistFilename = this.settingUtils.get("alistFilename");
+        outLog(alistUrl, "当前备份地址");
+        outLog(alistname, "当前备份用户名");
+        outLog(alistToPath, "当前备份路径");
+        outLog(alistFilename, "当前备份文件名");
         trunLog(this.settingUtils.get("islog"));
         outLog('cseffsddfsfdsfdfd');
 
@@ -499,9 +557,9 @@ export default class PluginSample extends Plugin {
     private async run() {
         if (currentDocId) {
             try {
-                showMessage("正在传输...",-1,"info","单笔记传输")
+                showMessage("正在传输...", -1, "info", "单笔记传输")
                 const notePath = await getCurrentNotePath(currentDocId);
-                outLog(notePath,"当前笔记路径");
+                outLog(notePath, "当前笔记路径");
                 //获取文字数据并保存
                 //是否标记只读
                 if (this.settingUtils.get("readonlyText")) {
@@ -533,7 +591,7 @@ export default class PluginSample extends Plugin {
                 console.error("运行时发生错误:", error);
                 showMessage("运行时发生错误:" + error.message);
             }
-            showMessage("传输结束!",6000,"info","单笔记传输")
+            showMessage("传输结束!", 6000, "info", "单笔记传输")
         }
     }
 
@@ -545,47 +603,47 @@ export default class PluginSample extends Plugin {
 
     //全量传输
     private async runpush() {
-        showMessage("正在传输...",-1,"info","传输")
+        showMessage("正在传输...", -1, "info", "传输")
         outLog('runpush');
         try {
             const link = await exportAllDataPath();
             // const data = await downloadImage(link);
             await importAllDataURL(await downloadImage(link));
         } catch (error) {
-            showMessage("传输失败!",-1,"error","传输")
+            showMessage("传输失败!", -1, "error", "传输")
             console.error('Failed to run runpush:', error);
         }
-        showMessage("传输结束!",6000,"info","传输")
+        showMessage("传输结束!", 6000, "info", "传输")
     }
 
     //全量拉取
     private async runpull() {
-        showMessage("正在拉取...",-1,"info","拉取")
+        showMessage("正在拉取...", -1, "info", "拉取")
         outLog('runpull');
         try {
             const link = await exportAllDataPathURL();
             // const data = await downloadImage(link);
             await importAllData(await downloadImageURL(link));
         } catch (error) {
-            showMessage("拉取失败!",-1,"error","拉取")
+            showMessage("拉取失败!", -1, "error", "拉取")
             console.error('Failed to run runpull:', error);
         }
-        showMessage("拉取结束!",6000,"info","拉取")
+        showMessage("拉取结束!", 6000, "info", "拉取")
     }
 
-    private async runbackup() {
-        showMessage("正在备份...",-1,"info","备份")
+    private async runbackup(alistFilename: string) {
+        showMessage("正在备份...", -1, "info", "备份")
         outLog('runbackup');
         try {
-        const link = await exportAllDataPath();
-        // const data = await downloadImageURL(link);
-        const data = await downloadImage(link);
-        await uploadToAList(data,alistToPath);
+            const link = await exportAllDataPath();
+            // const data = await downloadImageURL(link);
+            const data = await downloadImage(link);
+            await uploadToAList(data, alistToPath + "/" + alistFilename);
         } catch (error) {
-            showMessage("备份失败!",-1,"error","备份")
+            showMessage("备份失败!", -1, "error", "备份");
             console.error('Failed to run runbackup:', error);
         }
-        showMessage("备份结束!",6000,"info","备份")
+        showMessage("备份结束!", 6000, "info", "备份")
     }
 
 }
