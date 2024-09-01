@@ -1,0 +1,127 @@
+
+import * as api from './api';
+import * as myapi from './myapi';
+export async function ceshi() {
+    console.log('ceshi');
+    const res = await api.lsNotebooks();
+    console.log(res);
+    const res2 = await api.readDir("data/20240827231422-iiuknu8");
+    console.log(res2);
+    const res3 = await api.getHPathByPath("20240827231422-iiuknu8", "/20240827231424-o1erwwg.sy");
+    console.log(res3);
+}
+
+export async function getFileTreeData() {
+    // 获取笔记本列表
+    const notebooksResponse = await fetch('/api/notebook/lsNotebooks',{
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({})
+    });
+    const notebooksData = await notebooksResponse.json();
+    if (notebooksData.code !== 0) {
+        throw new Error(notebooksData.msg);
+    }
+
+    const fileTreeData = [];
+
+
+    for (const notebook of notebooksData.data.notebooks) {
+        // 获取每个笔记本的文件和文件夹列表
+        const readDirResponse = await fetch('/api/file/readDir', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ path: `data/${notebook.id}` })
+        });
+        const readDirData = await readDirResponse.json();
+        if (readDirData.code !== 0) {
+            throw new Error(readDirData.msg);
+        }
+
+        const children = await processDirectory(notebook.id, readDirData.data);
+
+
+        fileTreeData.push({
+            id: notebook.id,
+            name: notebook.name,
+            type: 'folder',
+            expanded: false,
+            children: children
+        });
+    }
+
+    return fileTreeData;
+}
+
+async function processDirectory(notebookId, items) {
+    const children = [];
+
+
+    for (const item of items) {
+        if (item.name === ".siyuan") {
+            continue;
+        }
+
+        if (item.isDir) {
+            const readDirResponse = await fetch('/api/file/readDir', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                // body: JSON.stringify({ path: `data/${notebookId}/${item.name}` })
+                body: JSON.stringify({ path: `${await myapi.getCurrentNotePath(item.name, item.isDir)}` })
+                //TODO: 以后优化速度，不调用这个api，它返回的内容比较多
+
+            });
+            const readDirData = await readDirResponse.json();
+            if (readDirData.code !== 0) {
+                throw new Error(readDirData.msg);
+            }
+
+            const subChildren = await processDirectory(notebookId, readDirData.data);
+
+
+            children.push({
+                id: item.name,
+                name: await GetNameByID(item.name),
+                type: 'folder',
+                expanded: false,
+                children: subChildren
+            });
+        } else {
+            children.push({
+                id: item.name,
+                name: await GetNameByID(item.name),
+                type: 'file'
+            });
+        }
+    }
+
+    return children;
+}
+
+async function GetNameByID(id : string) {
+    //判断是否有后缀名，若有则去掉后缀名
+    const index = id.lastIndexOf('.');
+    if (index !== -1) {
+        id = id.substring(0, index);
+    }
+    const res = await fetch(`/api/filetree/getHPathByID`,{
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ id: id })
+    });
+    const data = await res.json();
+    if (data.code !== 0) {
+        throw new Error(data.msg);
+    }
+    console.log(data.data);
+    const name = data.data.split('/').pop();
+    return name;
+}

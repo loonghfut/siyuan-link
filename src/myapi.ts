@@ -104,7 +104,7 @@ export async function getNotebookName(notebookId: string) {
 
 // 1获取当前笔记的路径
 //  这个api也可以直接获取文件内容，但这个api可能以后更新会失效，所以还是用另一个api获取文件内容
-export async function getCurrentNotePath(docId: string) {
+export async function getCurrentNotePath(docId: string , siDir = false) {
     try {
         const docResponse = await fetch('/api/filetree/getDoc', {
             method: 'POST',
@@ -121,6 +121,12 @@ export async function getCurrentNotePath(docId: string) {
         const docData = await docResponse.json();
         outLog(docData, "getCurrentNotePath");
         notebookId = docData.data.box;
+        if(siDir){
+            const notePath = "data/" + docData.data.box +docData.data.path;
+            //去掉后缀
+            const notePath2 = notePath.substring(0, notePath.lastIndexOf('.'));
+            return notePath2;
+        }
         const notePath = "data/" + docData.data.box + docData.data.path;
         // console.log('Current note path:', notePath);
         return notePath;

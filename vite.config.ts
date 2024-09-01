@@ -6,7 +6,7 @@ import livereload from "rollup-plugin-livereload"
 import { svelte } from "@sveltejs/vite-plugin-svelte"
 import zipPack from "vite-plugin-zip-pack";
 import fg from 'fast-glob';
-
+import vue from '@vitejs/plugin-vue';
 import vitePluginYamlI18n from './yaml-plugin';
 
 const args = minimist(process.argv.slice(2))
@@ -31,7 +31,8 @@ export default defineConfig({
             inDir: 'public/i18n',
             outDir: `${distDir}/i18n`
         }),
-
+        
+        vue(),
         viteStaticCopy({
             targets: [
                 {

@@ -1,4 +1,5 @@
-
+import { createApp } from "vue";
+import App from "./app.vue";
 import {
     Plugin,
     showMessage,
@@ -58,6 +59,7 @@ export let alistUrl: string | null = null;
 export let alistToPath: string | null = null;
 export let alistFilename: string | null = null;
 // let notePath: string | null = null;
+
 export default class SiYuanLink extends Plugin {
 
     customTab: () => IModel;
@@ -117,6 +119,34 @@ export default class SiYuanLink extends Plugin {
                 this.addMenu2(rect);
                 // this.runbackup();
                 // showMessage("处理中...");
+            }
+        });
+
+
+
+        this.addDock({
+            config: {
+                position: "RightTop",
+                size: { width: 200, height: 0 },
+                icon: "iconSaving",
+                title: "Custom Dock",
+                hotkey: "⌥⌘W",
+            },
+            data: null,
+            type: DOCK_TYPE,
+            resize() {
+                console.log(DOCK_TYPE + " resize");
+            },
+            update() {
+                console.log(DOCK_TYPE + " update");
+                
+            },
+            init: (dock) => {
+                dock.element.innerHTML = `<div id="siyuan-link-dock" style="height: 100% ; width: 100%;"></div>`;
+                createApp(App, { plugin: dock}).mount("#siyuan-link-dock");  
+            },
+            destroy() {
+                console.log("destroy dock:", DOCK_TYPE);
             }
         });
 
@@ -543,8 +573,8 @@ export default class SiYuanLink extends Plugin {
 
     //插件卸载相关
     async onunload() {
-        console.log(this.i18n.byePlugin);
-        showMessage("Goodbye SiYuan Plugin");
+        // console.log(this.i18n.byePlugin);
+        showMessage("Goodbye ");
         console.log("onunload");
     }
 
