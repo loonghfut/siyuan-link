@@ -143,7 +143,9 @@ export default class SiYuanLink extends Plugin {
             },
             init: (dock) => {
                 dock.element.innerHTML = `<div id="siyuan-link-dock" style="height: 100% ; width: 100%;"></div>`;
-                createApp(App, { plugin: dock}).mount("#siyuan-link-dock");  
+                const app = createApp(App, { plugin: dock});
+                app.config.globalProperties.$selectedFileIds=[];
+                app.mount("#siyuan-link-dock");
             },
             destroy() {
                 console.log("destroy dock:", DOCK_TYPE);

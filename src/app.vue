@@ -11,7 +11,7 @@
     <!-- 当之变化时，实时更新 -->
     <div class="info-container">
       <p class="info-item">服务源: <span class="info-value">{{ serNum }}</span></p>
-      <!-- <p class="info-item">alistUrl: <span class="info-value">{{ alistUrl }}</span></p> -->
+      <p class="info-item">已选笔记: <span class="info-value">{{ selectedFileIdsName }}</span></p>
     </div>
   </div>
 </template>
@@ -19,8 +19,9 @@
 <script>
 import { ref } from 'vue';
 import FileTree from './MyVue/FileTree.vue';
-import {serNum } from '@/index';
+import { serNum } from '@/index';
 import * as filetree from '@/FileTreeApi';
+import {selectedFileIdsName} from './MyVue/FileTree.vue';
 export default {
 
   name: 'App',
@@ -33,23 +34,20 @@ export default {
   setup() {
 
   },
-  async mounted () {
+
+  async mounted() {
     // console.log('mounted');
     // console.log(await filetree.getFileTreeData());
     // this.fileTreeData = await filetree.getFileTreeData();
   },
   methods: {
-    toggle() {
-      // console.log(this.plugin);
-      filetree.ceshi();
-    
-    },
+
     async refreshPage() {
       this.serNum = serNum;
       // filetree.ceshi();
       const value2 = await filetree.getFileTreeData();
       console.log(value2);
-      this.fileTreeData= value2
+      this.fileTreeData = value2
       // console.log(fileTreeData);
       // console.log(fileTreeData.value);
     },
@@ -57,7 +55,8 @@ export default {
   data() {
     return {
       serNum,
-      fileTreeData: ref(["加载中。。。"]),
+      fileTreeData: ref([{ "name": "正在加载中。。。" }]),
+      selectedFileIdsName,
     };
   }
 }
@@ -92,34 +91,46 @@ export default {
   font-size: 20px;
   margin-bottom: 20px;
 }
+
 .header-container {
-  display: flex; /* 使用 Flexbox 布局 */
-  align-items: center; /* 垂直居中对齐元素 */
+  display: flex;
+  /* 使用 Flexbox 布局 */
+  align-items: center;
+  /* 垂直居中对齐元素 */
 }
 
 .title {
-  margin-right: 30px; /* 给标题和按钮之间添加一点间隔 */
+  margin-right: 30px;
+  /* 给标题和按钮之间添加一点间隔 */
 }
 
 .MY-refresh-button {
-  background: none; /* 按钮背景色 */
-  color: white; /* 按钮文字颜色 */
+  background: none;
+  /* 按钮背景色 */
+  color: white;
+  /* 按钮文字颜色 */
   /* 加个边框 */
   border: 1px solid white;
   /* 字体大小 */
   font-size: 13px;
   margin-bottom: 20px;
-  border-radius: 5px; /* 圆角效果 */
+  border-radius: 5px;
+  /* 圆角效果 */
   /* padding: 2px 2px; 内边距 */
-  cursor: pointer; /* 鼠标移动到按钮上时变为手型 */
-  transition: background-color 0.3s ease; /* 添加过渡效果 */
+  cursor: pointer;
+  /* 鼠标移动到按钮上时变为手型 */
+  transition: background-color 0.3s ease;
+  /* 添加过渡效果 */
 }
 
 .MY-refresh-button:hover {
-  background-color: #0056b3; /* 悬停时的背景色 */
+  background-color: #0056b3;
+  /* 悬停时的背景色 */
 }
+
 .info-container {
-  background-color: #2e2e2e; /* 深色背景 */
+  background-color: #2e2e2e;
+  /* 深色背景 */
   padding: 15px;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
@@ -128,11 +139,13 @@ export default {
 
 .info-item {
   font-size: 16px;
-  color: #ccc; /* 浅色文本 */
+  color: #ccc;
+  /* 浅色文本 */
 }
 
 .info-value {
   font-weight: bold;
-  color: #61afef; /* 亮色值 */
+  color: #61afef;
+  /* 亮色值 */
 }
 </style>

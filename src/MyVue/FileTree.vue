@@ -11,6 +11,10 @@
 </template>
 
 <script>
+
+import {ref} from 'vue';
+export const selectedFileIds = ref([]);
+export const selectedFileIdsName = ref([]);
 export default {
   name: 'FileTree',
   props: {
@@ -21,21 +25,28 @@ export default {
   },
   data() {
     return {
-      selectedFileId: [],
+      selectedFileIds,
+      selectedFileIdsName
     };
   },
   methods: {
     toggle(item, event) {
       if (item.type === 'folder') {
         item.expanded = !item.expanded;
-      }
-      const index = this.selectedFileIds.indexOf(item.id);
-      if (index === -1) {
-        this.selectedFileIds.push(item.id);
+        event.stopPropagation();
       } else {
-        this.selectedFileIds.splice(index, 1);
+        const index = this.selectedFileIds.indexOf(item.id);
+        if (index === -1) {
+          this.selectedFileIds.push(item.id);
+          this.selectedFileIdsName.push(item.name);
+        } else {
+          this.selectedFileIds.splice(index, 1);
+          this.selectedFileIdsName.splice(index, 1);
+        }
+        console.log(selectedFileIds.value);
+        console.log(this.selectedFileIds);
+        event.stopPropagation();
       }
-      event.stopPropagation();
     }
   }
 }
@@ -66,7 +77,11 @@ export default {
 .name {
   margin-right: auto;
 }
+
 .tree-item.selected {
-  background-color: #7498f4; /* 你可以根据需要调整颜色 */
+  background-color: #2560f8;
+  /* 加圆角 */
+  border-radius: 5px;
+  /* 你可以根据需要调整颜色 */
 }
 </style>
