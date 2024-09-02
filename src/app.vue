@@ -9,26 +9,18 @@
     </div>
     <!-- 实时展示 url, token, alistname, alistmima, alistUrl -->
     <!-- 当之变化时，实时更新 -->
-    <div>
-      <p>url: {{ url }}</p>
-      <p>token: {{ token }}</p>
-      <p>alistname: {{ alistname }}</p>
-      <p>alistmima: {{ alistmima }}</p>
-      <p>alistUrl: {{ alistUrl }}</p>
+    <div class="info-container">
+      <p class="info-item">服务源: <span class="info-value">{{ serNum }}</span></p>
+      <!-- <p class="info-item">alistUrl: <span class="info-value">{{ alistUrl }}</span></p> -->
     </div>
-   
-    2222{{ plugin.type }}
-
-
   </div>
 </template>
 
 <script>
 import { ref } from 'vue';
 import FileTree from './MyVue/FileTree.vue';
-import { url, token, alistname, alistmima, alistUrl } from '@/index';
+import {serNum } from '@/index';
 import * as filetree from '@/FileTreeApi';
-const fileTreeData = ref(null);
 export default {
 
   name: 'App',
@@ -38,12 +30,13 @@ export default {
   props: {
     plugin: Object // 接收 plugin 对象
   },
-  setup () {
-    console.log(url, token, alistname, alistmima, alistUrl);
-    filetree.ceshi();
-    filetree.getFileTreeData().then(data => {
-      fileTreeData.value = data;
-    });
+  setup() {
+
+  },
+  async mounted () {
+    // console.log('mounted');
+    // console.log(await filetree.getFileTreeData());
+    // this.fileTreeData = await filetree.getFileTreeData();
   },
   methods: {
     toggle() {
@@ -52,24 +45,19 @@ export default {
     
     },
     async refreshPage() {
-      this.url= url;
-      this.token= token;
-      this.alistname= alistname;
-      this.alistmima= alistmima;
-      this.alistUrl= alistUrl;
+      this.serNum = serNum;
       // filetree.ceshi();
-      fileTreeData.value = await filetree.getFileTreeData();
-      console.log(fileTreeData);
+      const value2 = await filetree.getFileTreeData();
+      console.log(value2);
+      this.fileTreeData= value2
+      // console.log(fileTreeData);
+      // console.log(fileTreeData.value);
     },
   },
   data() {
     return {
-      fileTreeData,
-      url,
-      token,
-      alistname,
-      alistmima,
-      alistUrl,
+      serNum,
+      fileTreeData: ref(["加载中。。。"]),
     };
   }
 }
@@ -130,5 +118,21 @@ export default {
 .MY-refresh-button:hover {
   background-color: #0056b3; /* 悬停时的背景色 */
 }
+.info-container {
+  background-color: #2e2e2e; /* 深色背景 */
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+  margin-top: 20px;
+}
 
+.info-item {
+  font-size: 16px;
+  color: #ccc; /* 浅色文本 */
+}
+
+.info-value {
+  font-weight: bold;
+  color: #61afef; /* 亮色值 */
+}
 </style>

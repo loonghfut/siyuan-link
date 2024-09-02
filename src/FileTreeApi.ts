@@ -1,4 +1,4 @@
-
+import { url , token } from './index';
 import * as api from './api';
 import * as myapi from './myapi';
 export async function ceshi() {
@@ -13,10 +13,11 @@ export async function ceshi() {
 
 export async function getFileTreeData() {
     // 获取笔记本列表
-    const notebooksResponse = await fetch('/api/notebook/lsNotebooks',{
+    const notebooksResponse = await fetch(`${url}/api/notebook/lsNotebooks`,{
         method: 'POST',
         headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json' ,
+            'Authorization': `token ${token}`
         },
         body: JSON.stringify({})
     });
@@ -30,10 +31,11 @@ export async function getFileTreeData() {
 
     for (const notebook of notebooksData.data.notebooks) {
         // 获取每个笔记本的文件和文件夹列表
-        const readDirResponse = await fetch('/api/file/readDir', {
+        const readDirResponse = await fetch(`${url}/api/file/readDir`, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'Authorization': `token ${token}`
             },
             body: JSON.stringify({ path: `data/${notebook.id}` })
         });
@@ -67,13 +69,14 @@ async function processDirectory(notebookId, items) {
         }
 
         if (item.isDir) {
-            const readDirResponse = await fetch('/api/file/readDir', {
+            const readDirResponse = await fetch(`${url}/api/file/readDir`, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'Authorization': `token ${token}`
                 },
                 // body: JSON.stringify({ path: `data/${notebookId}/${item.name}` })
-                body: JSON.stringify({ path: `${await myapi.getCurrentNotePath(item.name, item.isDir)}` })
+                body: JSON.stringify({ path: `${await myapi.getCurrentNotePath(item.name, item.isDir , true)}` })
                 //TODO: 以后优化速度，不调用这个api，它返回的内容比较多
 
             });
@@ -110,10 +113,11 @@ async function GetNameByID(id : string) {
     if (index !== -1) {
         id = id.substring(0, index);
     }
-    const res = await fetch(`/api/filetree/getHPathByID`,{
+    const res = await fetch(`${url}/api/filetree/getHPathByID`,{
         method: 'POST',
         headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'Authorization': `token ${token}`
         },
         body: JSON.stringify({ id: id })
     });

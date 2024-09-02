@@ -104,15 +104,27 @@ export async function getNotebookName(notebookId: string) {
 
 // 1获取当前笔记的路径
 //  这个api也可以直接获取文件内容，但这个api可能以后更新会失效，所以还是用另一个api获取文件内容
-export async function getCurrentNotePath(docId: string , siDir = false) {
+export async function getCurrentNotePath(docId: string, isDir = false, isUrl = false) {
     try {
-        const docResponse = await fetch('/api/filetree/getDoc', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ id: docId }),
-        });
+        let docResponse;
+        if (isUrl) {
+             docResponse = await fetch(`${url}/api/filetree/getDoc`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `token ${token}`
+                },
+                body: JSON.stringify({ id: docId }),
+            });
+        } else {
+             docResponse = await fetch('/api/filetree/getDoc', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ id: docId }),
+            });
+        }
 
         if (!docResponse.ok) {
             throw new Error('Failed to get current document information');
@@ -121,8 +133,8 @@ export async function getCurrentNotePath(docId: string , siDir = false) {
         const docData = await docResponse.json();
         outLog(docData, "getCurrentNotePath");
         notebookId = docData.data.box;
-        if(siDir){
-            const notePath = "data/" + docData.data.box +docData.data.path;
+        if (isDir) {
+            const notePath = "data/" + docData.data.box + docData.data.path;
             //去掉后缀
             const notePath2 = notePath.substring(0, notePath.lastIndexOf('.'));
             return notePath2;
@@ -270,7 +282,7 @@ export async function downloadImage(imagePath: string): Promise<Blob | null> {
 
     try {
         // 使用fetch调用API
-        showMessage('下载资源文件中...',-1,'info','下载资源');
+        showMessage('下载资源文件中...', -1, 'info', '下载资源');
         const response = await fetch(apiUrl, {
             method: 'POST',
             headers: {
@@ -280,17 +292,17 @@ export async function downloadImage(imagePath: string): Promise<Blob | null> {
         });
 
         if (!response.ok) {
-            showMessage('网络错误，下载失败',-1,'error','下载资源');
+            showMessage('网络错误，下载失败', -1, 'error', '下载资源');
             throw new Error('Network response was not ok');
         }
         const buffer = await response.arrayBuffer();
         // 将图片二进制数据转换为Blob对象
         const blob = new Blob([buffer], { type: mimeType });
-        showMessage('资源文件下载成功',6000,'info','下载资源');
+        showMessage('资源文件下载成功', 6000, 'info', '下载资源');
         outLog(blob, "downloadImage");
         return blob;
     } catch (error) {
-        showMessage('下载资源文件失败',-1,'error','下载资源');
+        showMessage('下载资源文件失败', -1, 'error', '下载资源');
         console.error("请求失败:", error);
         return null;
     }
@@ -595,7 +607,7 @@ export async function transferLockAndReadonly(jsonString) {
 //全量导出所有数据
 //远程导出全量资源数据，返回zip文件路径
 export async function exportAllDataPathURL() {
-    showMessage('远程全量导出中...',-1, 'info', '远程导出');
+    showMessage('远程全量导出中...', -1, 'info', '远程导出');
     const response = await fetch(`${url}/api/export/exportData`, {
         method: 'POST',
         headers: {
@@ -626,7 +638,7 @@ export async function exportAllDataPathURL() {
 
 //本地导出全量资源数据，返回zip文件路径
 export async function exportAllDataPath() {
-    showMessage('全量导出中...',-1, 'info', '全量导出');
+    showMessage('全量导出中...', -1, 'info', '全量导出');
     const response = await fetch(`/api/export/exportData`, {
         method: 'POST',
         headers: {
@@ -848,20 +860,20 @@ export async function uploadToAList(blob, filePath) {
         // 检查响应并返回结果
         console.log(file.name, "asdas");
         if (response.status === 200) {
-            const result  = await response.json();
-            if(result.code === 200){
-            showMessage('备份到alist成功', 6000, 'info', '备份到AList');
-            console.log("Upload successful.");
+            const result = await response.json();
+            if (result.code === 200) {
+                showMessage('备份到alist成功', 6000, 'info', '备份到AList');
+                console.log("Upload successful.");
             } else {
-                showMessage('备份到AList失败:'+ result.message, -1, 'error', '备份到AList');
+                showMessage('备份到AList失败:' + result.message, -1, 'error', '备份到AList');
                 console.log(`Upload failed. Status code: ${response.status} - Message: ${result.message}`);
             }
         } else {
-            showMessage('备份到AList失败:'+ await response.text(), -1, 'error', '备份到AList');
+            showMessage('备份到AList失败:' + await response.text(), -1, 'error', '备份到AList');
             console.log(`Upload failed. Status code: ${response.status} - Message: ${await response.text()}`);
         }
     } catch (error) {
-        showMessage('备份到AList失败:'+ error.message, -1, 'error', '备份到AList');
+        showMessage('备份到AList失败:' + error.message, -1, 'error', '备份到AList');
         console.error('上传出错:', error);
         throw error; // 将错误向上抛出
     }
