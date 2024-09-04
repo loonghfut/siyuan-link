@@ -11,7 +11,9 @@
     <!-- 当之变化时，实时更新 -->
     <div class="info-container">
       <p class="info-item">服务源: <span class="info-value">{{ serNum }}</span></p>
-      <p class="info-item">已选笔记: <span class="info-value">{{ selectedFileIdsName }}</span></p>
+      <!-- 当selectedFileIdsName有值时，显示，否则不显示 -->
+      <p v-if="selectedFileIdsName.length" class="info-item">已选笔记: <span class="info-value">{{ selectedFileIdsName }}</span></p>
+      <p v-if="selectedFileIdsName.length" class="info-item" @click="plugin.pullNote(selectedFileIds)"  >拉取笔记</p>
     </div>
   </div>
 </template>
@@ -21,7 +23,7 @@ import { ref } from 'vue';
 import FileTree from './MyVue/FileTree.vue';
 import { serNum } from '@/index';
 import * as filetree from '@/FileTreeApi';
-import {selectedFileIdsName} from './MyVue/FileTree.vue';
+import {selectedFileIdsName ,selectedFileIds } from './MyVue/FileTree.vue';
 export default {
 
   name: 'App',
@@ -57,6 +59,9 @@ export default {
       serNum,
       fileTreeData: ref([{ "name": "正在加载中。。。" }]),
       selectedFileIdsName,
+      selectedFileIds,
+      filetree,
+      plugin: this.plugin,
     };
   }
 }

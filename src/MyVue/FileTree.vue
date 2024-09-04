@@ -15,6 +15,7 @@
 import {ref} from 'vue';
 export const selectedFileIds = ref([]);
 export const selectedFileIdsName = ref([]);
+export const selectedFileBox = ref([]);
 export default {
   name: 'FileTree',
   props: {
@@ -26,7 +27,9 @@ export default {
   data() {
     return {
       selectedFileIds,
-      selectedFileIdsName
+      selectedFileIdsName,
+      selectedFileBox
+    
     };
   },
   methods: {
@@ -36,12 +39,14 @@ export default {
         event.stopPropagation();
       } else {
         const index = this.selectedFileIds.indexOf(item.id);
-        if (index === -1) {
+        if (index === -1) {//TODO:待优化，之后用对象数组
           this.selectedFileIds.push(item.id);
           this.selectedFileIdsName.push(item.name);
+          this.selectedFileBox.push(item.box);
         } else {
           this.selectedFileIds.splice(index, 1);
           this.selectedFileIdsName.splice(index, 1);
+          this.selectedFileBox.splice(index, 1);//BUG
         }
         console.log(selectedFileIds.value);
         console.log(this.selectedFileIds);

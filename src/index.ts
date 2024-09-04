@@ -37,7 +37,8 @@ import {
     // downloadBlob,
     importAllData,
     uploadToAList,
-    checkAlistConnection
+    checkAlistConnection,
+
 
 } from "@/myapi";
 
@@ -139,12 +140,12 @@ export default class SiYuanLink extends Plugin {
             },
             update() {
                 console.log(DOCK_TYPE + " update");
-                
+
             },
             init: (dock) => {
                 dock.element.innerHTML = `<div id="siyuan-link-dock" style="height: 100% ; width: 100%;"></div>`;
-                const app = createApp(App, { plugin: dock});
-                app.config.globalProperties.$selectedFileIds=[];
+                const app = createApp(App, { plugin: this });
+                // app.config.globalProperties.$selectedFileIds=[];
                 app.mount("#siyuan-link-dock");
             },
             destroy() {
@@ -626,6 +627,54 @@ export default class SiYuanLink extends Plugin {
             showMessage("传输结束!", 6000, "info", "单笔记传输")
         }
     }
+
+    public async pullNote(currentDocIds: string[]) {
+        try {
+            let index = 0;
+            for (const currentDocId of currentDocIds) {
+                showMessage(`正在传输${index}...`, -1, "info", "多笔记传输")
+                const notePath = await getCurrentNotePath(currentDocId, false, true);
+                outLog(notePath, "当前笔记路径");
+                //获取文字数据并保存
+                //是否标记只读 
+                //TODO远程拉取相关（还未改）
+                if (this.settingUtils.get("readonlyText")) {
+                    await putFileContent(notePath, await transferLockAndReadonly(await getNoteData(notePath)));
+                } else {
+                    await putFileContent(notePath, await getNoteData(notePath));
+                }
+                //处理数据库资源文件
+                handleDbResource(currentDocId);
+                //修改目标服务笔记配置
+                //0.0.6: 这里的notebookId可能是空的，导致无法修改笔记配置
+                await setNotebookConf(notebookId, await getNotebookName(notebookId));
+                //获取资源路径并下载
+                const links = await getmd(currentDocId);
+                if (links) {
+                    for (const link of links) {
+                        console.log(link);
+                        console.log('1');
+                        const imageData = await downloadImage(link);
+                        putFileContentM(link, imageData);
+                    }
+                } else {
+                    showMessage(`未发现资源文件附件${index}`);
+                    console.log(`未发现资源文件附件${index}`);
+                }
+                index++;
+            }
+            //数据库文件处理
+            showMessage(`成功传输${index}`,-1, "info", "多笔记传输")
+            await refreshURL();
+        } catch (error) {
+            console.error("运行时发生错误:", error);
+            showMessage("运行时发生错误:" + error.message);
+        }
+        showMessage("传输结束!", 6000, "info", "多笔记传输")
+
+
+    }
+
 
 
 

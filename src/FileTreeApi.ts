@@ -1,6 +1,7 @@
 import { url , token } from './index';
 import * as api from './api';
 import * as myapi from './myapi';
+import { showMessage } from 'siyuan';
 export async function ceshi() {
     console.log('ceshi');
     const res = await api.lsNotebooks();
@@ -89,6 +90,7 @@ async function processDirectory(notebookId, items) {
 
 
             children.push({
+                box: notebookId,
                 id: item.name,
                 name: await GetNameByID(item.name),
                 type: 'folder',
@@ -97,6 +99,7 @@ async function processDirectory(notebookId, items) {
             });
         } else {
             children.push({
+                box: notebookId,
                 id: item.name,
                 name: await GetNameByID(item.name),
                 type: 'file'
@@ -129,3 +132,4 @@ async function GetNameByID(id : string) {
     const name = data.data.split('/').pop();
     return name;
 }
+
