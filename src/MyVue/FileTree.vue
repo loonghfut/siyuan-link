@@ -46,7 +46,7 @@ export default {
         } else {
           this.selectedFileIds.splice(index, 1);
           this.selectedFileIdsName.splice(index, 1);
-          this.selectedFileBox.splice(index, 1);//BUG
+          this.selectedFileBox.splice(index, 1);
         }
         console.log(selectedFileIds.value);
         console.log(this.selectedFileIds);

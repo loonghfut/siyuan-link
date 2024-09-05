@@ -23,7 +23,8 @@
       <!-- 当selectedFileIdsName有值时，显示，否则不显示 -->
       <p v-if="selectedFileIdsName.length" class="info-item">已选笔记: <span class="info-value">{{ selectedFileIdsName
           }}</span></p>
-      <p v-if="selectedFileIdsName.length" class="info-item"><button
+      <p>-----------------</p>
+      <p v-if="selectedFileIdsName.length" class="info-item"><button class="MY-refresh-button"
           @click="plugin.pullNote(selectedFileIds)">拉取笔记</button></p>
     </div>
   </div>
@@ -35,7 +36,7 @@ import FileTree from './MyVue/FileTree.vue';
 import { serNum } from '@/index';
 import * as filetree from '@/FileTreeApi';
 import { selectedFileIdsName, selectedFileIds } from './MyVue/FileTree.vue';
-export  const selectedOption = ref("");
+export const selectedOption = ref("");
 export default {
 
   name: 'App',
@@ -91,7 +92,7 @@ export default {
       selectedFileIds,
       filetree,
       plugin: this.plugin,
-      selectedOption, 
+      selectedOption,
       options: [],
       loading: false
     };
@@ -186,7 +187,8 @@ export default {
   color: #61afef;
   /* 亮色值 */
 }
-.MY-select-box{
+
+.MY-select-box {
   background-color: #333;
   color: #fff;
   border: 1px solid #555;
@@ -196,10 +198,12 @@ export default {
   margin-bottom: 20px;
   margin-right: 6px;
 }
+
 .MY-select-box option {
   background-color: #333;
   color: #fff;
 }
+
 .MY-select-label {
   margin-right: 10px;
 }
