@@ -38,7 +38,8 @@ import {
     importAllData,
     uploadToAList,
     checkAlistConnection,
-    refresh
+    refresh,
+    getCurrentNotePathById,
 
 } from "@/myapi";
 
@@ -119,6 +120,7 @@ export default class SiYuanLink extends Plugin {
             title: "全量备份到alist",
             position: "left",
             callback: () => {
+                // console.log(await getCurrentNotePathById(currentDocId));
                 let rect = document.querySelector("#plugin_siyuan-link_1").getBoundingClientRect();
                 this.addMenu2(rect);
                 // this.runbackup();

@@ -177,6 +177,56 @@ export async function getCurrentNotePath(docId: string, isDir = false, isUrl = f
     }
 }
 
+export async function getCurrentNotePathById(docId: string, isDir = false, isUrl = false) {
+    const index = docId.lastIndexOf('.');
+    if (index !== -1) {
+        docId = docId.substring(0, index);
+    }
+    try {
+        let docResponse;
+        if (isUrl) {
+            docResponse = await fetch(`${url}/api/filetree/getPathByID`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `token ${token}`
+                },
+                body: JSON.stringify({ id: docId }),
+            });
+        } else {
+            docResponse = await fetch('/api/filetree/getPathByID', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ id: docId }),
+            });
+        }
+
+        if (!docResponse.ok) {
+            throw new Error('Failed to get current document information');
+        }
+
+        const docData = await docResponse.json();
+        outLog(docData, "getCurrentNotePath");
+        notebookId = docData.data.box;
+        if (isDir) {
+            const notePath = "data" +docData.data ;
+            //TODO:这里返回路径没有笔记本的，需要知道笔记本的id才行
+            //去掉后缀
+            const notePath2 = notePath.substring(0, notePath.lastIndexOf('.'));
+            return notePath2;
+        }
+        const notePath = "data" +docData.data ;
+        // console.log('Current note path:', notePath);
+        return notePath;
+    } catch (error) {
+        console.error('Error getting current note path:', error);
+    }
+}
+
+
+
 // 2导出笔记文字数据
 export async function getNoteData(notePath: string, isUrl = false) {
     let response;
