@@ -38,7 +38,7 @@ import {
     importAllData,
     uploadToAList,
     checkAlistConnection,
-
+    refresh
 
 } from "@/myapi";
 
@@ -637,25 +637,25 @@ export default class SiYuanLink extends Plugin {
                 outLog(notePath, "当前笔记路径");
                 //获取文字数据并保存
                 //是否标记只读 
-                //TODO远程拉取相关（还未改）
+                //远程拉取相关
                 if (this.settingUtils.get("readonlyText")) {
-                    await putFileContent(notePath, await transferLockAndReadonly(await getNoteData(notePath)));
+                    await putFileContent(notePath, await transferLockAndReadonly(await getNoteData(notePath,true)),false);
                 } else {
-                    await putFileContent(notePath, await getNoteData(notePath));
+                    await putFileContent(notePath, await getNoteData(notePath,true),false);
                 }
                 //处理数据库资源文件
                 handleDbResource(currentDocId);
                 //修改目标服务笔记配置
                 //0.0.6: 这里的notebookId可能是空的，导致无法修改笔记配置
-                await setNotebookConf(notebookId, await getNotebookName(notebookId));
+                await setNotebookConf(notebookId, await getNotebookName(notebookId,true),false);
                 //获取资源路径并下载
-                const links = await getmd(currentDocId);
+                const links = await getmd(currentDocId,true);
                 if (links) {
                     for (const link of links) {
                         console.log(link);
                         console.log('1');
-                        const imageData = await downloadImage(link);
-                        putFileContentM(link, imageData);
+                        const imageData = await downloadImageURL(link);
+                        putFileContentM(link, imageData,false);
                     }
                 } else {
                     showMessage(`未发现资源文件附件${index}`);
@@ -665,7 +665,7 @@ export default class SiYuanLink extends Plugin {
             }
             //数据库文件处理
             showMessage(`成功传输${index}`,-1, "info", "多笔记传输")
-            await refreshURL();
+            // await refresh();
         } catch (error) {
             console.error("运行时发生错误:", error);
             showMessage("运行时发生错误:" + error.message);

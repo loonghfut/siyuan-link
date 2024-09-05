@@ -49,7 +49,7 @@ export async function isconnect() {
 }
 
 //更改目标服务笔记本配置（解决笔记本关闭问题）
-export async function setNotebookConf(notebookId, rename: string) {
+export async function setNotebookConf(notebookId, rename: string, isUrl = true) {
     const conf = {
         name: rename,
         closed: false,
@@ -59,16 +59,30 @@ export async function setNotebookConf(notebookId, rename: string) {
         // dailyNoteTemplatePath: ""
     };
     try {
-        const response = await fetch(`${url}/api/notebook/setNotebookConf`, {
-            method: 'POST',
-            headers: {
-                'Authorization': `token ${token}`
-            },
-            body: JSON.stringify({
-                notebook: notebookId,
-                conf: conf
-            })
-        });
+        let response;
+        if (isUrl) {
+            response = await fetch(`${url}/api/notebook/setNotebookConf`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `token ${token}`
+                },
+                body: JSON.stringify({
+                    notebook: notebookId,
+                    conf: conf
+                })
+            });
+        } else {
+            response = await fetch('/api/notebook/setNotebookConf', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    notebook: notebookId,
+                    conf: conf
+                })
+            });
+        }
 
         if (!response.ok) {
             throw new Error('Failed to set notebook configuration');
@@ -81,13 +95,25 @@ export async function setNotebookConf(notebookId, rename: string) {
     }
 }
 //获取笔记本名称
-export async function getNotebookName(notebookId: string) {
+export async function getNotebookName(notebookId: string, isUrl = false) {
     try {
         console.log(notebookId);
-        const response = await fetch('/api/notebook/getNotebookConf', {
-            method: 'POST',
-            body: JSON.stringify({ notebook: notebookId }),
-        });
+        let response;
+        if (isUrl) {
+            response = await fetch(`${url}/api/notebook/getNotebookConf`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `token ${token}`
+                },
+                body: JSON.stringify({ notebook: notebookId }),
+            });
+        } else {
+            response = await fetch('/api/notebook/getNotebookConf', {
+                method: 'POST',
+                body: JSON.stringify({ notebook: notebookId }),
+            });
+        }
 
         if (!response.ok) {
             throw new Error('Failed to get notebook name');
@@ -105,10 +131,14 @@ export async function getNotebookName(notebookId: string) {
 // 1获取当前笔记的路径
 //  这个api也可以直接获取文件内容，但这个api可能以后更新会失效，所以还是用另一个api获取文件内容
 export async function getCurrentNotePath(docId: string, isDir = false, isUrl = false) {
+    const index = docId.lastIndexOf('.');
+    if (index !== -1) {
+        docId = docId.substring(0, index);
+    }
     try {
         let docResponse;
         if (isUrl) {
-             docResponse = await fetch(`${url}/api/filetree/getDoc`, {
+            docResponse = await fetch(`${url}/api/filetree/getDoc`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -117,7 +147,7 @@ export async function getCurrentNotePath(docId: string, isDir = false, isUrl = f
                 body: JSON.stringify({ id: docId }),
             });
         } else {
-             docResponse = await fetch('/api/filetree/getDoc', {
+            docResponse = await fetch('/api/filetree/getDoc', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -148,14 +178,26 @@ export async function getCurrentNotePath(docId: string, isDir = false, isUrl = f
 }
 
 // 2导出笔记文字数据
-export async function getNoteData(notePath: string) {
-    const response = await fetch(`/api/file/getFile`, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ path: notePath }),
-    });
+export async function getNoteData(notePath: string, isUrl = false) {
+    let response;
+    if (isUrl) {
+        response = await fetch(`${url}/api/file/getFile`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `token ${token}`
+            },
+            body: JSON.stringify({ path: notePath }),
+        });
+    } else {
+        response = await fetch(`/api/file/getFile`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ path: notePath }),
+        });
+    }
     if (response.ok) {
         const data = await response.text();
         console.log('成功获取笔记数据');
@@ -199,14 +241,30 @@ export async function hebing23(notePath: string) {
 // 导出笔记资源数据
 //// 获取资源文件路径(用原文件不好提取路径，所以用md文件提取路径)
 //////导出为md文件
-export async function getmd(id: string) {
-    const response = await fetch(`/api/export/exportMdContent`, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ id: id }),
-    });
+export async function getmd(id: string, isUrl = false) {
+    const index = id.lastIndexOf('.');
+    if (index !== -1) {
+        id = id.substring(0, index);
+    }
+    let response;
+    if (isUrl) {
+        response = await fetch(`${url}/api/export/exportMdContent`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `token ${token}`
+            },
+            body: JSON.stringify({ id: id }),
+        });
+    } else {
+        response = await fetch(`/api/export/exportMdContent`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ id: id }),
+        });
+    }
     if (response.ok) {
         console.log('成功获取笔记md数据');
         // console.log(response.status);
@@ -429,7 +487,7 @@ export async function exportResources(name, paths) {
 }
 
 // 导入笔记文字数据
-export async function putFileContent(filePath: string, content: string): Promise<void> {
+export async function putFileContent(filePath: string, content: string, isUrl = true): Promise<void> {
     outLog(content, "putFileContent");
     const blob = new Blob([content], { type: 'text/plain' });
     const formData = new FormData();
@@ -439,14 +497,21 @@ export async function putFileContent(filePath: string, content: string): Promise
     formData.append('isDir', 'false');
     // formData.append('modTime', new Date().toISOString());
     // console.log(formData);
-    const response = await fetch(`${url}/api/file/putFile`, {
-        method: 'POST',
-        headers: {
-            'Authorization': `token ${token}`
-        },
-        body: formData
-        // body: JSON.stringify(formData)
-    });
+    let response;
+    if (isUrl) {
+        response = await fetch(`${url}/api/file/putFile`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `token ${token}`
+            },
+            body: formData
+        });
+    } else {
+        response = await fetch('/api/file/putFile', {
+            method: 'POST',
+            body: formData
+        });
+    }
 
     if (!response.ok) {
         showMessage('网络错误，传输失败');
@@ -467,7 +532,7 @@ export async function putFileContent(filePath: string, content: string): Promise
 }
 
 // 导入笔记资源数据(接受blob对象)
-export async function putFileContentM(filePath: string, content): Promise<void> {
+export async function putFileContentM(filePath: string, content, isUrl = true): Promise<void> {
     outLog(content, "putFileContentM");
     outLog('M', "putFileContentM");
 
@@ -492,14 +557,25 @@ export async function putFileContentM(filePath: string, content): Promise<void> 
     formData.append('isDir', 'false');
     // formData.append('modTime', new Date().toISOString());
     // console.log(formData);
-    const response = await fetch(`${url}/api/file/putFile`, {
-        method: 'POST',
-        headers: {
-            'Authorization': `token ${token}`
-        },
-        body: formData
-        // body: JSON.stringify(formData)
-    });
+    let response;
+    if (isUrl) {
+        response = await fetch(`${url}/api/file/putFile`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `token ${token}`
+            },
+            body: formData
+            // body: JSON.stringify(formData)
+        });
+    } else {
+        response = await fetch('/api/file/putFile', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: formData
+        });
+    }
 
     if (!response.ok) {
         showMessage('网络错误，传输失败');
@@ -544,7 +620,7 @@ export async function refresh() {
 //处理数据库资源文件
 export async function handleDbResource(currentDocId) {
     //获取笔记文件数据
-    const data = await getNoteData(await getCurrentNotePath(currentDocId));
+    const data = await getNoteData(await getCurrentNotePath(currentDocId, false, true), true);
     //将json字符串转换为json对象，并输出
 
     //提取数据库资源文件路径
@@ -553,7 +629,7 @@ export async function handleDbResource(currentDocId) {
     if (dbResourcePaths) {
         for (const dbResourcePath of dbResourcePaths) {
             console.log(dbResourcePath);
-            await putFileContent(dbResourcePath, await getNoteData(dbResourcePath));
+            await putFileContent(dbResourcePath, await getNoteData(dbResourcePath), false);
         }
     } else {
         console.log("没有数据库资源文件");

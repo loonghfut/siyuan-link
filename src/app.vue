@@ -13,7 +13,7 @@
       <p class="info-item">服务源: <span class="info-value">{{ serNum }}</span></p>
       <!-- 当selectedFileIdsName有值时，显示，否则不显示 -->
       <p v-if="selectedFileIdsName.length" class="info-item">已选笔记: <span class="info-value">{{ selectedFileIdsName }}</span></p>
-      <p v-if="selectedFileIdsName.length" class="info-item" @click="plugin.pullNote(selectedFileIds)"  >拉取笔记</p>
+      <p v-if="selectedFileIdsName.length" class="info-item"><button @click="plugin.pullNote(selectedFileIds)">拉取笔记</button></p>
     </div>
   </div>
 </template>
