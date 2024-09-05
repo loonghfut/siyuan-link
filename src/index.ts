@@ -92,6 +92,9 @@ export default class SiYuanLink extends Plugin {
 <symbol id="iconDataTransferTech" viewBox="0 0 32 32">
 <path d="M16 4h-2v24h2zM4 16h24M16 4l8 8-8 8zM8 8h16M24 24h-16"/>
 </symbol>
+<symbol id="iconCloudUpload" viewBox="0 0 32 32">
+  <path fill="currentColor" d="M6 22h24v2H6z" class="clr-i-outline clr-i-outline-path-1"/><path fill="currentColor" d="M30.84 13.37A1.94 1.94 0 0 0 28.93 12h-2.38a3 3 0 0 1-.14 2h2.54c1.05 2.94 2.77 7.65 3.05 8.48V30H4v-7.52C4.28 21.65 7.05 14 7.05 14h2.53a3 3 0 0 1-.14-2H7.07a1.92 1.92 0 0 0-1.9 1.32C2 22 2 22.1 2 22.33V30a2 2 0 0 0 2 2h28a2 2 0 0 0 2-2v-7.67c0-.23 0-.33-3.16-8.96" class="clr-i-outline clr-i-outline-path-2"/><path fill="currentColor" d="m18 19.84l6.38-6.35A1 1 0 1 0 23 12.08L19 16V4a1 1 0 1 0-2 0v12l-4-3.95a1 1 0 0 0-1.41 1.42Z" class="clr-i-outline clr-i-outline-path-3"/><path fill="none" d="M0 0h36v36H0z"/>
+</symbol>
 `);
 
 
@@ -112,7 +115,7 @@ export default class SiYuanLink extends Plugin {
             }
         });
         this.addTopBar({
-            icon: "iconSaving",
+            icon: "iconCloudUpload",
             title: "全量备份到alist",
             position: "left",
             callback: () => {
@@ -128,10 +131,9 @@ export default class SiYuanLink extends Plugin {
         this.addDock({
             config: {
                 position: "RightTop",
-                size: { width: 200, height: 0 },
+                size: { width: 300, height: 0 },
                 icon: "iconSaving",
-                title: "Custom Dock",
-                hotkey: "⌥⌘W",
+                title: "目标源笔记",
             },
             data: null,
             type: DOCK_TYPE,
@@ -421,6 +423,20 @@ export default class SiYuanLink extends Plugin {
                 }
             }
         });
+        this.settingUtils.addItem({
+            key: "isrefresh",
+            value: true,
+            type: "checkbox",
+            title: "拉取笔记时是否刷新",
+            description: "控制拉取笔记时是否刷新页面（建议开启）",
+            action: {
+                callback: () => {
+                    // Return data and save it in real time
+                    let value = !this.settingUtils.get("isrefresh");
+                    this.settingUtils.set("isrefresh", value);
+                }
+            }
+        });
 
         try {
             this.settingUtils.load();
@@ -639,23 +655,23 @@ export default class SiYuanLink extends Plugin {
                 //是否标记只读 
                 //远程拉取相关
                 if (this.settingUtils.get("readonlyText")) {
-                    await putFileContent(notePath, await transferLockAndReadonly(await getNoteData(notePath,true)),false);
+                    await putFileContent(notePath, await transferLockAndReadonly(await getNoteData(notePath, true)), false);
                 } else {
-                    await putFileContent(notePath, await getNoteData(notePath,true),false);
+                    await putFileContent(notePath, await getNoteData(notePath, true), false);
                 }
                 //处理数据库资源文件
                 handleDbResource(currentDocId);
                 //修改目标服务笔记配置
                 //0.0.6: 这里的notebookId可能是空的，导致无法修改笔记配置
-                await setNotebookConf(notebookId, await getNotebookName(notebookId,true),false);
+                await setNotebookConf(notebookId, await getNotebookName(notebookId, true), false);
                 //获取资源路径并下载
-                const links = await getmd(currentDocId,true);
+                const links = await getmd(currentDocId, true);
                 if (links) {
                     for (const link of links) {
                         console.log(link);
                         console.log('1');
                         const imageData = await downloadImageURL(link);
-                        putFileContentM(link, imageData,false);
+                        putFileContentM(link, imageData, false);
                     }
                 } else {
                     showMessage(`未发现资源文件附件${index}`);
@@ -664,8 +680,10 @@ export default class SiYuanLink extends Plugin {
                 index++;
             }
             //数据库文件处理
-            showMessage(`成功传输${index}`,-1, "info", "多笔记传输")
-            // await refresh();
+            showMessage(`成功传输${index}`, -1, "info", "多笔记传输")
+            if (this.settingUtils.get("isrefresh")) {
+                await refresh();
+            }
         } catch (error) {
             console.error("运行时发生错误:", error);
             showMessage("运行时发生错误:" + error.message);
@@ -678,9 +696,7 @@ export default class SiYuanLink extends Plugin {
 
 
 
-    // private async dbug() {
-    //     console.log('dbug');
-    // }
+
 
     //全量传输
     private async runpush() {

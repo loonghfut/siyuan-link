@@ -12,6 +12,7 @@
       </div>
       <button class="MY-refresh-button" @click="refreshPage()">刷新</button>
     </div>
+    <span v-if="loading">加载中...</span>
     <div class="tree-container">
       <FileTree :items="fileTreeData" />
     </div>
@@ -48,26 +49,38 @@ export default {
   // },
 
   async mounted() {
+    this.loading = true;
     this.options = await filetree.listNotebooks()
+    this.loading = false;
     // console.log('mounted');
     // console.log(await filetree.getFileTreeData());
     // this.fileTreeData = await filetree.getFileTreeData();
   },
   methods: {
-
+    async refreshPage1() {
+      this.loading = true;
+      this.serNum = serNum;
+      const value2 = await filetree.getFileTreeData();
+      console.log(value2);
+      this.fileTreeData = value2
+      this.loading = false;
+    },
     async refreshPage() {
+      this.loading = true;
       this.serNum = serNum;
       // filetree.ceshi();
       const value2 = await filetree.getFileTreeData();
       console.log(value2);
       this.fileTreeData = value2
+      this.options = await filetree.listNotebooks()
       // console.log(fileTreeData);
       // console.log(fileTreeData.value);
+      this.loading = false;
     },
     onOptionChange() {
       // 选择选项后执行的函数
       console.log('选择的笔记本:', this.selectedOption);
-      this.refreshPage();
+      this.refreshPage1();
     }
   },
   data() {
@@ -79,7 +92,8 @@ export default {
       filetree,
       plugin: this.plugin,
       selectedOption, 
-      options: []
+      options: [],
+      loading: false
     };
   }
 }

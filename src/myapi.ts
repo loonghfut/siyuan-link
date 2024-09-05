@@ -695,8 +695,9 @@ export async function exportAllDataPathURL() {
         if (data.code === 0) {
             showMessage('远程全量导出成功', 6000, 'info', '远程导出');
             const link = '/temp' + data.data.zip;
-            outLog(link, "exportAllDataPathURL");
-            return link;
+            const link1 = decodeURIComponent(link);
+            outLog(link1, "exportAllDataPathURL");
+            return link1;
         } else {
             showMessage('远程全量导出失败，返回信息：' + data.msg, -1, 'error', '远程导出');
             console.log('远程全量导出失败，返回信息：' + data.msg);
