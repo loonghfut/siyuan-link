@@ -570,9 +570,6 @@ export async function putFileContentM(filePath: string, content, isUrl = true): 
     } else {
         response = await fetch('/api/file/putFile', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
             body: formData
         });
     }
@@ -589,7 +586,7 @@ export async function putFileContentM(filePath: string, content, isUrl = true): 
                 outLog('File content saved successfully!', 'putFileContentM');
                 showMessage('资源文件成功传输');
             } else {
-                showMessage('资源传输失败，返回信息：' + data.msg);
+                showMessage('资源传输失败，返回信息：' + data.msg, -1, 'error');
                 outLog('File content saved failed!', 'putFileContentM');
             }
         });

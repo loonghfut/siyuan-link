@@ -1,6 +1,8 @@
-import { url , token } from './index';
+import { url, token } from './index';
 import * as api from './api';
 import * as myapi from './myapi';
+import {selectedOption} from './app.vue';
+
 // import { showMessage } from 'siyuan';
 export async function ceshi() {
     console.log('ceshi');
@@ -14,10 +16,10 @@ export async function ceshi() {
 
 export async function getFileTreeData() {
     // 获取笔记本列表
-    const notebooksResponse = await fetch(`${url}/api/notebook/lsNotebooks`,{
+    const notebooksResponse = await fetch(`${url}/api/notebook/lsNotebooks`, {
         method: 'POST',
         headers: {
-            'Content-Type': 'application/json' ,
+            'Content-Type': 'application/json',
             'Authorization': `token ${token}`
         },
         body: JSON.stringify({})
@@ -27,10 +29,15 @@ export async function getFileTreeData() {
         throw new Error(notebooksData.msg);
     }
 
+
     const fileTreeData = [];
 
 
     for (const notebook of notebooksData.data.notebooks) {
+        // console.log(selectedOption.value);
+        if (selectedOption.value !== notebook.name) {
+            continue;
+        }
         // 获取每个笔记本的文件和文件夹列表
         const readDirResponse = await fetch(`${url}/api/file/readDir`, {
             method: 'POST',
@@ -55,6 +62,7 @@ export async function getFileTreeData() {
             expanded: false,
             children: children
         });
+
     }
 
     return fileTreeData;
@@ -77,7 +85,7 @@ async function processDirectory(notebookId, items) {
                     'Authorization': `token ${token}`
                 },
                 // body: JSON.stringify({ path: `data/${notebookId}/${item.name}` })
-                body: JSON.stringify({ path: `${await myapi.getCurrentNotePath(item.name, item.isDir , true)}` })
+                body: JSON.stringify({ path: `${await myapi.getCurrentNotePath(item.name, item.isDir, true)}` })
                 //TODO: 以后优化速度，不调用这个api，它返回的内容比较多
 
             });
@@ -110,13 +118,13 @@ async function processDirectory(notebookId, items) {
     return children;
 }
 
-async function GetNameByID(id : string) {
+async function GetNameByID(id: string) {
     //判断是否有后缀名，若有则去掉后缀名
     const index = id.lastIndexOf('.');
     if (index !== -1) {
         id = id.substring(0, index);
     }
-    const res = await fetch(`${url}/api/filetree/getHPathByID`,{
+    const res = await fetch(`${url}/api/filetree/getHPathByID`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -133,3 +141,18 @@ async function GetNameByID(id : string) {
     return name;
 }
 
+export async function listNotebooks(){
+    const notebooksResponse = await fetch(`${url}/api/notebook/lsNotebooks`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `token ${token}`
+        },
+        body: JSON.stringify({})
+    });
+    const notebooksData = await notebooksResponse.json();
+    if (notebooksData.code !== 0) {
+        throw new Error(notebooksData.msg);
+    }
+    return notebooksData.data.notebooks;
+}

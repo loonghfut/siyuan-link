@@ -2,6 +2,14 @@
   <div id="app">
     <div class="header-container"> <!-- 添加一个新的容器 -->
       <h1 class="title">目标源笔记</h1>
+      <div>
+        <!-- <label class="MY-select-label" for="options">笔记本:</label> -->
+        <select v-model="selectedOption" id="options" class="MY-select-box" @change="onOptionChange">
+          <option v-for="option in options" :key="option.id" :value="option.name">
+            {{ option.name }}
+          </option>
+        </select>
+      </div>
       <button class="MY-refresh-button" @click="refreshPage()">刷新</button>
     </div>
     <div class="tree-container">
@@ -12,8 +20,10 @@
     <div class="info-container">
       <p class="info-item">服务源: <span class="info-value">{{ serNum }}</span></p>
       <!-- 当selectedFileIdsName有值时，显示，否则不显示 -->
-      <p v-if="selectedFileIdsName.length" class="info-item">已选笔记: <span class="info-value">{{ selectedFileIdsName }}</span></p>
-      <p v-if="selectedFileIdsName.length" class="info-item"><button @click="plugin.pullNote(selectedFileIds)">拉取笔记</button></p>
+      <p v-if="selectedFileIdsName.length" class="info-item">已选笔记: <span class="info-value">{{ selectedFileIdsName
+          }}</span></p>
+      <p v-if="selectedFileIdsName.length" class="info-item"><button
+          @click="plugin.pullNote(selectedFileIds)">拉取笔记</button></p>
     </div>
   </div>
 </template>
@@ -23,7 +33,8 @@ import { ref } from 'vue';
 import FileTree from './MyVue/FileTree.vue';
 import { serNum } from '@/index';
 import * as filetree from '@/FileTreeApi';
-import {selectedFileIdsName ,selectedFileIds } from './MyVue/FileTree.vue';
+import { selectedFileIdsName, selectedFileIds } from './MyVue/FileTree.vue';
+export  const selectedOption = ref("");
 export default {
 
   name: 'App',
@@ -33,11 +44,11 @@ export default {
   props: {
     plugin: Object // 接收 plugin 对象
   },
-  setup() {
-
-  },
+  // setup() {
+  // },
 
   async mounted() {
+    this.options = await filetree.listNotebooks()
     // console.log('mounted');
     // console.log(await filetree.getFileTreeData());
     // this.fileTreeData = await filetree.getFileTreeData();
@@ -53,15 +64,22 @@ export default {
       // console.log(fileTreeData);
       // console.log(fileTreeData.value);
     },
+    onOptionChange() {
+      // 选择选项后执行的函数
+      console.log('选择的笔记本:', this.selectedOption);
+      this.refreshPage();
+    }
   },
   data() {
     return {
       serNum,
-      fileTreeData: ref([{ "name": "正在加载中。。。" }]),
+      fileTreeData: ref([]),
       selectedFileIdsName,
       selectedFileIds,
       filetree,
       plugin: this.plugin,
+      selectedOption, 
+      options: []
     };
   }
 }
@@ -126,6 +144,7 @@ export default {
   /* 鼠标移动到按钮上时变为手型 */
   transition: background-color 0.3s ease;
   /* 添加过渡效果 */
+  margin-right: 4px;
 }
 
 .MY-refresh-button:hover {
@@ -152,5 +171,22 @@ export default {
   font-weight: bold;
   color: #61afef;
   /* 亮色值 */
+}
+.MY-select-box{
+  background-color: #333;
+  color: #fff;
+  border: 1px solid #555;
+  /* padding: 5px; */
+  border-radius: 4px;
+  font-size: 13px;
+  margin-bottom: 20px;
+  margin-right: 6px;
+}
+.MY-select-box option {
+  background-color: #333;
+  color: #fff;
+}
+.MY-select-label {
+  margin-right: 10px;
 }
 </style>
