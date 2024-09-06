@@ -12,7 +12,7 @@
 
 <script>
 
-import {ref} from 'vue';
+import { ref } from 'vue';
 export const selectedFileIds = ref([]);
 export const selectedFileIdsName = ref([]);
 export const selectedFileBox = ref([]);
@@ -29,7 +29,7 @@ export default {
       selectedFileIds,
       selectedFileIdsName,
       selectedFileBox
-    
+
     };
   },
   methods: {
@@ -61,7 +61,11 @@ export default {
 .file-tree {
   list-style-type: none;
   padding-left: 15px;
-  color: #c0c0c0;
+  color: var(--b3-theme-on-background);
+}
+
+.tree-item:hook {
+  background-color: var(--b3-list-hover);
 }
 
 .tree-item {
@@ -76,7 +80,7 @@ export default {
 }
 
 .tree-item.expanded {
-  background-color: #333;
+  background-color: var(--b3-theme-primary-lightest);
 }
 
 .name {
@@ -84,7 +88,7 @@ export default {
 }
 
 .tree-item.selected {
-  background-color: #2560f8;
+  background-color: var(--b3-theme-primary-lightest);
   /* 加圆角 */
   border-radius: 5px;
   /* 你可以根据需要调整颜色 */

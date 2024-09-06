@@ -1,7 +1,8 @@
 import { url, token } from './index';
 import * as api from './api';
 import * as myapi from './myapi';
-import {selectedOption} from './app.vue';
+import { selectedOption } from './app.vue';
+import { showMessage } from 'siyuan';
 
 // import { showMessage } from 'siyuan';
 export async function ceshi() {
@@ -16,56 +17,62 @@ export async function ceshi() {
 
 export async function getFileTreeData() {
     // 获取笔记本列表
-    const notebooksResponse = await fetch(`${url}/api/notebook/lsNotebooks`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `token ${token}`
-        },
-        body: JSON.stringify({})
-    });
-    const notebooksData = await notebooksResponse.json();
-    if (notebooksData.code !== 0) {
-        throw new Error(notebooksData.msg);
-    }
-
-
-    const fileTreeData = [];
-
-
-    for (const notebook of notebooksData.data.notebooks) {
-        // console.log(selectedOption.value);
-        if (selectedOption.value !== notebook.name) {
-            continue;
-        }
-        // 获取每个笔记本的文件和文件夹列表
-        const readDirResponse = await fetch(`${url}/api/file/readDir`, {
+    try {
+        const notebooksResponse = await fetch(`${url}/api/notebook/lsNotebooks`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `token ${token}`
             },
-            body: JSON.stringify({ path: `data/${notebook.id}` })
+            body: JSON.stringify({})
         });
-        const readDirData = await readDirResponse.json();
-        if (readDirData.code !== 0) {
-            throw new Error(readDirData.msg);
+        const notebooksData = await notebooksResponse.json();
+        if (notebooksData.code !== 0) {
+            throw new Error(notebooksData.msg);
         }
 
-        const children = await processDirectory(notebook.id, readDirData.data);
+
+        const fileTreeData = [];
 
 
-        fileTreeData.push({
-            id: notebook.id,
-            name: notebook.name,
-            type: 'folder',
-            expanded: false,
-            children: children
-        });
+        for (const notebook of notebooksData.data.notebooks) {
+            // console.log(selectedOption.value);
+            if (selectedOption.value !== notebook.name) {
+                continue;
+            }
+            // 获取每个笔记本的文件和文件夹列表
+            const readDirResponse = await fetch(`${url}/api/file/readDir`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `token ${token}`
+                },
+                body: JSON.stringify({ path: `data/${notebook.id}` })
+            });
+            const readDirData = await readDirResponse.json();
+            if (readDirData.code !== 0) {
+                throw new Error(readDirData.msg);
+            }
 
+            const children = await processDirectory(notebook.id, readDirData.data);
+
+
+            fileTreeData.push({
+                id: notebook.id,
+                name: notebook.name,
+                type: 'folder',
+                expanded: false,
+                children: children
+            });
+
+        }
+
+        return fileTreeData;
+    } catch (error) {
+        console.error(error);
+        // showMessage("获取文件树失败,请检查配置");
+        return [{"name": "获取文件树失败,请检查配置"}];
     }
-
-    return fileTreeData;
 }
 
 async function processDirectory(notebookId, items) {
@@ -141,18 +148,25 @@ async function GetNameByID(id: string) {
     return name;
 }
 
-export async function listNotebooks(){
-    const notebooksResponse = await fetch(`${url}/api/notebook/lsNotebooks`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `token ${token}`
-        },
-        body: JSON.stringify({})
-    });
-    const notebooksData = await notebooksResponse.json();
-    if (notebooksData.code !== 0) {
-        throw new Error(notebooksData.msg);
+export async function listNotebooks() {
+    try {
+        const notebooksResponse = await fetch(`${url}/api/notebook/lsNotebooks`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `token ${token}`
+            },
+            body: JSON.stringify({})
+        });
+        const notebooksData = await notebooksResponse.json();
+        if (notebooksData.code !== 0) {
+            showMessage("获取目标源笔记本列表失败,请检查配置");
+            throw new Error(notebooksData.msg);
+        }
+        return notebooksData.data.notebooks;
+    } catch (error) {
+        console.error(error);
+        showMessage("获取目标源笔记本列表失败,请检查配置");
+        return [];
     }
-    return notebooksData.data.notebooks;
 }

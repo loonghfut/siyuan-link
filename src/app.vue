@@ -24,8 +24,8 @@
       <p v-if="selectedFileIdsName.length" class="info-item">已选笔记: <span class="info-value">{{ selectedFileIdsName
           }}</span></p>
       <p>-----------------</p>
-      <p v-if="selectedFileIdsName.length" class="info-item"><button class="MY-refresh-button"
-          @click="plugin.pullNote(selectedFileIds)">拉取笔记</button></p>
+      <div v-if="selectedFileIdsName.length"><button class="MY-pull-note-button"
+          @click="plugin.pullNote(selectedFileIds)">拉取笔记</button></div>
     </div>
   </div>
 </template>
@@ -106,7 +106,7 @@ export default {
   font-family: Avenir, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  color: #f6f8fa;
+  color: var(--b3-theme-on-background);
   /* background-color: #1e1e1e;
   min-height: 98%; */
   padding: 10px;
@@ -125,7 +125,7 @@ export default {
 }
 
 .title {
-  color: #f6f8fa;
+  color: var(--b3-theme-on-background);
   font-size: 20px;
   margin-bottom: 20px;
 }
@@ -138,17 +138,17 @@ export default {
 }
 
 .title {
-  margin-right: 30px;
+  margin-right: 15px;
   /* 给标题和按钮之间添加一点间隔 */
 }
 
 .MY-refresh-button {
   background: none;
   /* 按钮背景色 */
-  color: white;
+  color: var(--b3-theme-on-background);
   /* 按钮文字颜色 */
   /* 加个边框 */
-  border: 1px solid white;
+  border: 1px solid var(--b3-theme-on-background);
   /* 字体大小 */
   font-size: 13px;
   margin-bottom: 20px;
@@ -159,16 +159,18 @@ export default {
   /* 鼠标移动到按钮上时变为手型 */
   transition: background-color 0.3s ease;
   /* 添加过渡效果 */
-  margin-right: 4px;
+  margin-left: auto;
+  /* 靠右侧边 */
+
 }
 
 .MY-refresh-button:hover {
-  background-color: #0056b3;
+  background-color: var(--b3-list-hover);
   /* 悬停时的背景色 */
 }
 
 .info-container {
-  background-color: #2e2e2e;
+  background-color: var(--b3-theme-surface);
   /* 深色背景 */
   padding: 15px;
   border-radius: 8px;
@@ -178,7 +180,7 @@ export default {
 
 .info-item {
   font-size: 16px;
-  color: #ccc;
+  color: var(--b3-theme-on-background);;
   /* 浅色文本 */
 }
 
@@ -189,9 +191,9 @@ export default {
 }
 
 .MY-select-box {
-  background-color: #333;
-  color: #fff;
-  border: 1px solid #555;
+  background-color: var(--b3-theme-surface);
+  color: var(--b3-theme-on-background);
+  border: 1px solid var(--b3-theme-on-background);
   /* padding: 5px; */
   border-radius: 4px;
   font-size: 13px;
@@ -200,11 +202,38 @@ export default {
 }
 
 .MY-select-box option {
-  background-color: #333;
-  color: #fff;
+  background-color: var(--b3-theme-surface);;
+  color: var(--b3-theme-on-background);;
 }
 
 .MY-select-label {
   margin-right: 10px;
 }
+
+.MY-pull-note-button {
+  background: none;
+  /* 按钮背景色 */
+  color: var(--b3-theme-on-background);
+  /* 按钮文字颜色 */
+  /* 加个边框 */
+  border: 1px solid var(--b3-theme-on-background);
+  /* 字体大小 */
+  font-size: 13px;
+  margin-bottom: 5px;
+  border-radius: 5px;
+  /* 圆角效果 */
+  /* padding: 2px 2px; 内边距 */
+  cursor: pointer;
+  /* 鼠标移动到按钮上时变为手型 */
+  transition: background-color 0.3s ease;
+  /* 添加过渡效果 */
+  margin-left: auto;
+
+}
+
+.MY-pull-note-button:hover {
+  background-color: var(--b3-list-hover);
+  /* 悬停时的背景色 */
+}
+
 </style>
