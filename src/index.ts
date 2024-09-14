@@ -164,6 +164,7 @@ export default class SiYuanLink extends Plugin {
                 // console.log(this, "cehsihs8");
                 this.element.innerHTML = `<div id="alist-dock" style="height: 100% ; width: 100%;">
                 <iframe 
+                allow="clipboard-read; clipboard-write"
                 sandbox="allow-forms allow-presentation allow-same-origin allow-scripts allow-modals allow-popups" 
                 src="${targetURL}" 
                 data-src="" 
@@ -180,6 +181,7 @@ export default class SiYuanLink extends Plugin {
                 this.alistdock = dock;//将dock赋值给全局变量，以便在其它地方进行后续操作
                 dock.element.innerHTML = `<div id="alist-dock" style="height: 100% ; width: 100%;">
                 <iframe 
+                allow="clipboard-read; clipboard-write"
                 sandbox="allow-forms allow-presentation allow-same-origin allow-scripts allow-modals allow-popups" 
                 src="${alistUrl}" 
                 data-src="" 

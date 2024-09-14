@@ -120,8 +120,11 @@ alist备份只是方便在导出data时不用我手动上传到网盘上（此�
  优化：删除一些无用代码  
 
 > 0.2.1:  
- 优化：优化alist嵌入体验
+ 优化：优化alist嵌入体验  
  优化：删除了没有使用的svelte
+
+> 0.2.2:
+ 优化：允许对iframe的剪切板权限（进而优化网页端的alist复制链接体验）
 
 ## 最后
 自用插件，开源分享，代码凌乱不堪，插件使用了思源社区的模板，主要参考https://github.com/siyuan-community/siyuan-developer-docs
