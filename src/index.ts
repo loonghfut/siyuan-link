@@ -62,7 +62,7 @@ export let alistToPath: string | null = null;
 export let alistFilename: string | null = null;
 // let notePath: string | null = null;
 let targetURL: string | null = null;
-
+let isclickalist: boolean = true;
 export default class SiYuanLink extends Plugin {
     initalist: any;
     alistdock: any = null;
@@ -147,14 +147,15 @@ export default class SiYuanLink extends Plugin {
             data: null,
             type: "alist-dock",
             resize() {
-                console.log("alist-dock" + " resize");
-                console.log(this.element.clientWidth,'asaaaaaaaaaaaaaaa');
-                // console.log(this.element.clientHeight,'aaaaasddddddddddd')
-                
+                if (this.element.clientWidth == 0) {
+                    isclickalist = true;
+                } else {
+                    isclickalist = false;
+                }
             },
             update() {
-                console.log("alist-dock" + " update");
-                console.log(this, "cehsihs8");
+                // console.log("alist-dock" + " update");
+                // console.log(this, "cehsihs8");
                 this.element.innerHTML = `<div id="alist-dock" style="height: 100% ; width: 100%;">
                 <iframe 
                 sandbox="allow-forms allow-presentation allow-same-origin allow-scripts allow-modals allow-popups" 
@@ -170,7 +171,7 @@ export default class SiYuanLink extends Plugin {
                 </div>`;
             },
             init: (dock) => {
-                this.alistdock = dock;
+                this.alistdock = dock;//将dock赋值给全局变量，以便在其它地方进行后续操作
                 dock.element.innerHTML = `<div id="alist-dock" style="height: 100% ; width: 100%;">
                 <iframe 
                 sandbox="allow-forms allow-presentation allow-same-origin allow-scripts allow-modals allow-popups" 
@@ -189,7 +190,7 @@ export default class SiYuanLink extends Plugin {
                 console.log("destroy dock:", "alist-dock");
             }
         });
-        console.log(this.alistdock, "asdas1111111111111111111111111");
+
         this.addDock({
             config: {
                 position: "RightTop",
@@ -826,22 +827,37 @@ export default class SiYuanLink extends Plugin {
             const isContained = myapi.isUrlContained(target.dataset.href, alistUrl);
             // console.log(isContained);
             if (isContained) {
-                // const buttonAlist = document.querySelector('use[xlink:href="#iconAlist"]').parentElement;
                 const buttonAlist = document.querySelector('span[data-type="siyuan-linkalist-dock"]');
                 // console.log(buttonAlist, 'buttonAlist');
                 if (buttonAlist) {
                     // 手动触发点击事件
-                    const clickEvent = new MouseEvent('click', {
-                        bubbles: true,
-                        cancelable: true,
-                        view: window
-                    });
-                    buttonAlist.dispatchEvent(clickEvent);
-                    if (this.alistdock) {
+                    if (isclickalist) {//判断是否点击
+                        const clickEvent = new MouseEvent('click', {
+                            bubbles: true,
+                            cancelable: true,
+                            view: window
+                        });
+                        buttonAlist.dispatchEvent(clickEvent);
+                    }
+
+                    if (this.alistdock) {//判断是否存在
                         targetURL = target.dataset.href;
                         this.alistdock.update();
                     } else {
-                        console.error('Alist dock not found');
+                        //首次点击，以初始化
+                        const clickEvent = new MouseEvent('click', {
+                            bubbles: true,
+                            cancelable: true,
+                            view: window
+                        });
+                        buttonAlist.dispatchEvent(clickEvent);
+                        if (this.alistdock) {//判断是否存在
+                            targetURL = target.dataset.href;
+                            this.alistdock.update();
+                        } else {
+                            console.error('Alist dock not found');
+                        }
+                        // console.error('Alist dock not found');
                     }
                 } else {
                     console.error('Span element not found');
