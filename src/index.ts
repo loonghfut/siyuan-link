@@ -11,7 +11,7 @@ import {
 } from "siyuan";
 import "@/index.scss";
 // import * as api from "@/api"
-
+import * as myapi from "@/myapi";
 
 import {
     getCurrentNotePath,
@@ -47,7 +47,7 @@ import { SettingUtils } from "./libs/setting-utils";
 
 const STORAGE_NAME = "menu-config";
 const TAB_TYPE = "custom_tab";
-const DOCK_TYPE = "dock_tab";//之后列出目标服务笔记列表
+const DOCK_TYPE = "dock_tab";//之后列出目标服务笔记列表 done！
 
 
 export let currentDocId: string | null = null;
@@ -61,13 +61,16 @@ export let alistUrl: string | null = null;
 export let alistToPath: string | null = null;
 export let alistFilename: string | null = null;
 // let notePath: string | null = null;
+let targetURL: string | null = null;
 
 export default class SiYuanLink extends Plugin {
-
+    initalist: any;
+    alistdock: any = null;
     customTab: () => IModel;
     private settingUtils: SettingUtils;
     private isMobile: boolean;
     async onload() {
+        document.addEventListener("click", this.onlick, true);
         const frontEnd = getFrontend();
         this.isMobile = frontEnd === "mobile" || frontEnd === "browser-mobile";
         console.log(frontEnd, this.isMobile);
@@ -114,10 +117,7 @@ export default class SiYuanLink extends Plugin {
             title: "数据传输",
             position: "right",
             callback: () => {
-                // console.log("TopBar Icon Clicked");
-                // this.run();
-                // this.catch();//新功能调试
-                // this.dbug();
+                // if(this.isMobile)
                 let rect = document.querySelector("#barPlugins").getBoundingClientRect();
                 this.addMenu(rect);
                 // showMessage("处理中...");
@@ -148,12 +148,29 @@ export default class SiYuanLink extends Plugin {
             type: "alist-dock",
             resize() {
                 console.log("alist-dock" + " resize");
+                console.log(this.element.clientWidth,'asaaaaaaaaaaaaaaa');
+                // console.log(this.element.clientHeight,'aaaaasddddddddddd')
+                
             },
             update() {
                 console.log("alist-dock" + " update");
-
+                console.log(this, "cehsihs8");
+                this.element.innerHTML = `<div id="alist-dock" style="height: 100% ; width: 100%;">
+                <iframe 
+                sandbox="allow-forms allow-presentation allow-same-origin allow-scripts allow-modals allow-popups" 
+                src="${targetURL}" 
+                data-src="" 
+                border="0" 
+                frameborder="no" 
+                framespacing="0" 
+                allowfullscreen="true" 
+                style="height: 99% ; width: 100%;"
+                >
+                </iframe>
+                </div>`;
             },
             init: (dock) => {
+                this.alistdock = dock;
                 dock.element.innerHTML = `<div id="alist-dock" style="height: 100% ; width: 100%;">
                 <iframe 
                 sandbox="allow-forms allow-presentation allow-same-origin allow-scripts allow-modals allow-popups" 
@@ -172,7 +189,7 @@ export default class SiYuanLink extends Plugin {
                 console.log("destroy dock:", "alist-dock");
             }
         });
-
+        console.log(this.alistdock, "asdas1111111111111111111111111");
         this.addDock({
             config: {
                 position: "RightTop",
@@ -490,6 +507,7 @@ export default class SiYuanLink extends Plugin {
         }
         //插件设置相关
         console.log(this.i18n.helloPlugin);
+
     }
     //选中菜单设置
 
@@ -605,7 +623,7 @@ export default class SiYuanLink extends Plugin {
 
 
         let tabDiv = document.createElement("div");
-        
+
         this.customTab = this.addTab({
             type: TAB_TYPE,
             init() {
@@ -635,10 +653,12 @@ export default class SiYuanLink extends Plugin {
         // console.log(this.i18n.byePlugin);
         showMessage("Goodbye ");
         console.log("onunload");
+        document.removeEventListener("click", this.onlick, true);
     }
 
     uninstall() {
         console.log("uninstall");
+        document.removeEventListener("click", this.onlick, true);
     }
     //插件卸载相关
 
@@ -782,6 +802,63 @@ export default class SiYuanLink extends Plugin {
         }
         showMessage("备份结束!", 6000, "info", "备份")
     }
+    //点击链接触发的事件
+    onlick = (e) => {
+        // console.log(e.target);
+        if (
+            e.target.dataset &&
+            e.target.dataset.type == "a" &&
+            e.target.dataset.href
+        ) {
+            try {
+                console.log(e.target.dataset.href);
+                this.isrecall(e.target, e);
+            } catch (e) {
+                console.error(e);
+            }
+        }
+    };
 
+    isrecall(target: any, e: any) {
+        if (!target.dataset.href) {
+            return;
+        } else {
+            const isContained = myapi.isUrlContained(target.dataset.href, alistUrl);
+            // console.log(isContained);
+            if (isContained) {
+                // const buttonAlist = document.querySelector('use[xlink:href="#iconAlist"]').parentElement;
+                const buttonAlist = document.querySelector('span[data-type="siyuan-linkalist-dock"]');
+                // console.log(buttonAlist, 'buttonAlist');
+                if (buttonAlist) {
+                    // 手动触发点击事件
+                    const clickEvent = new MouseEvent('click', {
+                        bubbles: true,
+                        cancelable: true,
+                        view: window
+                    });
+                    buttonAlist.dispatchEvent(clickEvent);
+                    if (this.alistdock) {
+                        targetURL = target.dataset.href;
+                        this.alistdock.update();
+                    } else {
+                        console.error('Alist dock not found');
+                    }
+                } else {
+                    console.error('Span element not found');
+                }
+
+
+                // console.log(this.alistdock,'this.alistdock');
+
+                e.preventDefault();
+                e.stopPropagation();
+            }
+        }
+    }
 }
+
+// handleUrl(protocol, target:any) {
+
+// }
+
 

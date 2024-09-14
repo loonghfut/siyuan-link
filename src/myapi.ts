@@ -1047,3 +1047,17 @@ export async function checkAlistConnection(username, password) {
     }
 }
 
+export function isUrlContained(targetUrl, standardUrl) {
+    // 将传入的网址转换为 URL 对象
+    let target = new URL(targetUrl);
+    let standard = new URL(standardUrl);
+
+    // 比较协议、主机和路径
+    if (target.protocol === standard.protocol &&
+        target.hostname === standard.hostname &&
+        target.pathname.startsWith(standard.pathname)) {
+        return true;
+    }
+
+    return false;
+}
