@@ -70,7 +70,13 @@ export default class SiYuanLink extends Plugin {
     private settingUtils: SettingUtils;
     private isMobile: boolean;
     async onload() {
+        //监听事件
         document.addEventListener("click", this.onlick, true);
+
+        //TODO暂时放弃这种方案
+        // this.eventBus.on("paste", this.eventBusPaste);
+
+
         const frontEnd = getFrontend();
         this.isMobile = frontEnd === "mobile" || frontEnd === "browser-mobile";
         console.log(frontEnd, this.isMobile);
@@ -140,7 +146,7 @@ export default class SiYuanLink extends Plugin {
         this.addDock({
             config: {
                 position: "RightTop",
-                size: { width: 300, height: 0 },
+                size: { width: 250, height: 0 },
                 icon: "iconAlist",
                 title: "alist网页",
             },
@@ -654,11 +660,15 @@ export default class SiYuanLink extends Plugin {
         // console.log(this.i18n.byePlugin);
         showMessage("Goodbye ");
         console.log("onunload");
+
+        this.eventBus.off("paste", this.eventBusPaste);
         document.removeEventListener("click", this.onlick, true);
     }
 
     uninstall() {
         console.log("uninstall");
+
+        this.eventBus.off("paste", this.eventBusPaste);
         document.removeEventListener("click", this.onlick, true);
     }
     //插件卸载相关
@@ -870,6 +880,21 @@ export default class SiYuanLink extends Plugin {
                 e.stopPropagation();
             }
         }
+    }
+
+    private eventBusPaste(event: any) {
+        // 如果需异步处理请调用 preventDefault， 否则会进行默认处理
+        event.preventDefault();
+        showMessage("Paste event triggered");
+        console.log(event);
+        const pasttext = event.detail.textPlain;
+       
+        console.log(pasttext);
+       
+        // 如果使用了 preventDefault，必须调用 resolve，否则程序会卡死
+        event.detail.resolve({
+            textPlain: event.detail.textPlain.trim(),
+        });
     }
 }
 
