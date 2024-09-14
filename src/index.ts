@@ -179,6 +179,9 @@ export default class SiYuanLink extends Plugin {
             },
             init: (dock) => {
                 this.alistdock = dock;//将dock赋值给全局变量，以便在其它地方进行后续操作
+                if(alistUrl==""){
+                    showMessage("请先配置alist网址...",-1,"error");
+                }
                 dock.element.innerHTML = `<div id="alist-dock" style="height: 100% ; width: 100%;">
                 <iframe 
                 allow="clipboard-read; clipboard-write"
