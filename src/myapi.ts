@@ -958,11 +958,12 @@ export async function importAllData(blob: Blob) {
 /**
  * 执行AList流式上传的函数
  * @param {string} filePath - 在AList中的目标路径
- * @returns {Promise} - 包含上传结果的Promise对象
  */
+// 9/16 2024 更新：返回文件路径到剪切板
 export async function uploadToAList(blob, filePath) {
     try {
-        const file = new File([blob], 'backup_siyuan_data.zip', { type: 'application/zip' });
+        const FileName = filePath.split('/').pop()
+        const file = new File([blob], FileName, { type: 'application/zip' });
         // 创建用于上传的FormData对象
         const formData = new FormData();
         formData.append('file', file);
@@ -987,6 +988,18 @@ export async function uploadToAList(blob, filePath) {
             const result = await response.json();
             if (result.code === 200) {
                 showMessage('备份到alist成功', 6000, 'info', '备份到AList');
+                // 9/16 2024 更新：返回文件路径到剪切板
+                var markdownLink = `[${FileName}](${alistUrl}${filePath})`;
+                navigator.clipboard.writeText(markdownLink).then(function() {
+                    outLog('Markdown链接已复制到剪贴板', 'uploadToAList');
+                    // 可以在这里添加一个提示，告知用户链接已复制
+          
+                }).catch(function(err) {
+                    console.error('无法复制链接: ', err);
+                    // 可以在这里添加一个错误提示
+                    showMessage('无法复制链接', -1, 'error');
+                });
+
                 console.log("Upload successful.");
             } else {
                 showMessage('备份到AList失败:' + result.message, -1, 'error', '备份到AList');

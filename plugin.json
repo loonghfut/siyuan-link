@@ -2,7 +2,7 @@
   "name": "siyuan-link",
   "author": "steve",
   "url": "https://github.com/loonghfut/siyuan-link",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "minAppVersion": "3.0.12",
   "backends": [
     "all"

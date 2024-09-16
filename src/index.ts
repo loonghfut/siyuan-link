@@ -59,6 +59,7 @@ export let alistname: string | null = null;
 export let alistmima: string | null = null;
 export let alistUrl: string | null = null;
 export let alistToPath: string | null = null;
+export let alistToPath2: string | null = null;
 export let alistFilename: string | null = null;
 // let notePath: string | null = null;
 let targetURL: string | null = null;
@@ -142,6 +143,32 @@ export default class SiYuanLink extends Plugin {
                 // showMessage("处理中...");
             }
         });
+        this.addTopBar({
+            icon: "iconAlist",
+            title: "附件上传",
+            position: "right",
+            callback: () => {
+                const fileInput = document.createElement('input');
+                fileInput.type = 'file';
+                fileInput.accept = '*/*'; // 支持所有文件类型
+        
+                // 文件选择事件处理
+                fileInput.addEventListener('change', async (event) => {
+                    console.log(event);
+                    const inputElement = event.target as HTMLInputElement; // 类型断言
+                    const files = inputElement.files; // 现在可以安全地访问 files
+                    if (files && files.length > 0) {
+                        const file = files[0]; // 获取选中的第一个文件
+                        await uploadToAList(file, alistToPath2 + "/" + file.name); // 调用上传文件的函数
+                    }
+                });
+        
+                // 触发文件输入的点击事件
+                fileInput.click();
+            }
+        });
+
+
 
         this.addDock({
             config: {
@@ -511,6 +538,22 @@ export default class SiYuanLink extends Plugin {
                 }
             }
         });
+        this.settingUtils.addItem({
+            key: "alistToPath2",
+            value: "",
+            type: "textinput",
+            title: "附件上传路径",
+            description: "附件上传到alist的路径",
+            action: {
+                // Called when focus is lost and content changes
+                callback: async () => {
+                    // Return data and save it in real time
+                    let value = await this.settingUtils.takeAndSave("alistToPath2");
+                    alistToPath2 = value;
+                    // console.log(value);
+                }
+            }
+        });
 
         try {
             this.settingUtils.load();
@@ -625,10 +668,12 @@ export default class SiYuanLink extends Plugin {
         alistname = this.settingUtils.get("alistname");
         alistUrl = this.settingUtils.get("alistUrl");
         alistToPath = this.settingUtils.get("alistToPath");
+        alistToPath2 = this.settingUtils.get("alistToPath2");
         alistFilename = this.settingUtils.get("alistFilename");
         outLog(alistUrl, "当前备份地址");
         outLog(alistname, "当前备份用户名");
         outLog(alistToPath, "当前备份路径");
+        outLog(alistToPath2, "当前附件上传路径");
         outLog(alistFilename, "当前备份文件名");
         trunLog(this.settingUtils.get("islog"));
         outLog('cseffsddfsfdsfdfd');
