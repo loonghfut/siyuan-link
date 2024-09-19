@@ -1074,3 +1074,8 @@ export function isUrlContained(targetUrl, standardUrl) {
 
     return false;
 }
+
+//插入文档方法
+export function insertDoc(){
+
+}

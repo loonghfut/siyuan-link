@@ -8,10 +8,12 @@ import {
     IModel,
     Menu,
     confirm,
+    openTab
 } from "siyuan";
 import "@/index.scss";
 // import * as api from "@/api"
 import * as myapi from "@/myapi";
+import * as api from '@/api';
 
 import {
     getCurrentNotePath,
@@ -151,7 +153,7 @@ export default class SiYuanLink extends Plugin {
                 const fileInput = document.createElement('input');
                 fileInput.type = 'file';
                 fileInput.accept = '*/*'; // 支持所有文件类型
-        
+
                 // 文件选择事件处理
                 fileInput.addEventListener('change', async (event) => {
                     console.log(event);
@@ -160,9 +162,11 @@ export default class SiYuanLink extends Plugin {
                     if (files && files.length > 0) {
                         const file = files[0]; // 获取选中的第一个文件
                         await uploadToAList(file, alistToPath2 + "/" + file.name); // 调用上传文件的函数
+                        //增加插入笔记上传的文件链接
+                        api.appendBlock('markdown', `[${file.name}](${alistUrl}${alistToPath2}/${file.name})`, currentDocId);
                     }
                 });
-        
+
                 // 触发文件输入的点击事件
                 fileInput.click();
             }
@@ -184,6 +188,7 @@ export default class SiYuanLink extends Plugin {
                     isclickalist = true;
                 } else {
                     isclickalist = false;
+                    this.element.style.width = "200px";
                 }
             },
             update() {
@@ -206,8 +211,8 @@ export default class SiYuanLink extends Plugin {
             },
             init: (dock) => {
                 this.alistdock = dock;//将dock赋值给全局变量，以便在其它地方进行后续操作
-                if(alistUrl==""){
-                    showMessage("请先配置alist网址...",-1,"error");
+                if (alistUrl == "") {
+                    showMessage("请先配置alist网址...", -1, "error");
                 }
                 dock.element.innerHTML = `<div id="alist-dock" style="height: 100% ; width: 100%;">
                 <iframe 
@@ -587,6 +592,45 @@ export default class SiYuanLink extends Plugin {
                 // this.dbug();
             }
         });
+        // menu.addItem({
+        //     icon: "iconAlist",
+        //     label: "ALIST",
+        //     click: async () => {
+        //         const tab = openTab({
+        //             app: this.app,
+        //             custom: {
+        //                 icon: "iconAlist",
+        //                 title: "ALIST",
+        //                 data: null,
+        //                 id: this.name + 'alist'
+        //             },
+        //             position: "right",
+        //         });
+        //         const tab1 = await tab
+        //         console.log(tab1);
+        //         console.log(tab1.headElement);
+        //         const alistSpan = tab1.headElement.querySelector('span.item__text');
+        //         // 修改其文本内容
+        //         if (alistSpan) {
+        //             alistSpan.textContent = '新的内容'; // 在这里替换 '新的内容' 为你想要的内容
+        //         }
+        //         console.log(tab1.panelElement);
+        //         //插入html
+        //         tab1.panelElement.innerHTML = `<iframe
+        //         allow="clipboard-read; clipboard-write"
+        //         sandbox="allow-forms allow-presentation allow-same-origin allow-scripts allow-modals allow-popups"
+        //         src="${alistUrl}"
+        //         data-src=""
+        //         border="0"
+        //         frameborder="no"
+        //         framespacing="0"
+        //         allowfullscreen="true"
+        //         style="height: 100% ; width: 100%;"
+        //         >
+        //         </iframe>`;
+
+        //     }
+        // });
         menu.open({
             x: rect.right,
             y: rect.bottom,
@@ -938,9 +982,9 @@ export default class SiYuanLink extends Plugin {
         showMessage("Paste event triggered");
         console.log(event);
         const pasttext = event.detail.textPlain;
-       
+
         console.log(pasttext);
-       
+
         // 如果使用了 preventDefault，必须调用 resolve，否则程序会卡死
         event.detail.resolve({
             textPlain: event.detail.textPlain.trim(),

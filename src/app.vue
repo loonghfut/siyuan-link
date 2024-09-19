@@ -30,6 +30,8 @@
   </div>
 </template>
 
+
+
 <script>
 import { ref } from 'vue';
 import FileTree from './MyVue/FileTree.vue';
@@ -38,7 +40,7 @@ import * as filetree from '@/FileTreeApi';
 import { selectedFileIdsName, selectedFileIds } from './MyVue/FileTree.vue';
 export const selectedOption = ref("");
 export default {
-
+//TODO:通过opentab打开笔记本md文件
   name: 'App',
   components: {
     FileTree

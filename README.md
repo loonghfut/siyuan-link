@@ -133,6 +133,9 @@ alist备份只是方便在导出data时不用我手动上传到网盘上（此�
 > 0.2.4:  
  增加：上传附件到alist功能  
 
+> 0.2.5:  
+ 优化：上传附件到alist功能
+
 ## 最后
 自用插件，开源分享，代码凌乱不堪，插件使用了思源社区的模板，主要参考https://github.com/siyuan-community/siyuan-developer-docs
 
