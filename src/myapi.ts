@@ -669,7 +669,7 @@ export async function handleDbResource(currentDocId) {
     //获取笔记文件数据
     const data = await getNoteData(await getCurrentNotePath(currentDocId, false, true), true);
     //将json字符串转换为json对象，并输出
-
+//BUG
     //提取数据库资源文件路径
     const dbResourcePaths = extractDbResourcePaths(data);
     outLog(dbResourcePaths, "handleDbResource");
