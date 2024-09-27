@@ -1,5 +1,5 @@
 
-import { url, token, alistname, alistmima, alistUrl } from '@/index';
+import { url, token, } from '@/index';
 import "@/index.scss";
 import { showMessage } from 'siyuan';
 
@@ -211,13 +211,13 @@ export async function getCurrentNotePathById(docId: string, isDir = false, isUrl
         outLog(docData, "getCurrentNotePath");
         notebookId = docData.data.box;
         if (isDir) {
-            const notePath = "data" +docData.data ;
+            const notePath = "data" + docData.data;
             //TODO:这里返回路径没有笔记本的，需要知道笔记本的id才行
             //去掉后缀
             const notePath2 = notePath.substring(0, notePath.lastIndexOf('.'));
             return notePath2;
         }
-        const notePath = "data" +docData.data ;
+        const notePath = "data" + docData.data;
         // console.log('Current note path:', notePath);
         return notePath;
     } catch (error) {
@@ -669,7 +669,7 @@ export async function handleDbResource(currentDocId) {
     //获取笔记文件数据
     const data = await getNoteData(await getCurrentNotePath(currentDocId, false, true), true);
     //将json字符串转换为json对象，并输出
-//BUG
+    //BUG
     //提取数据库资源文件路径
     const dbResourcePaths = extractDbResourcePaths(data);
     outLog(dbResourcePaths, "handleDbResource");
@@ -960,105 +960,105 @@ export async function importAllData(blob: Blob) {
  * @param {string} filePath - 在AList中的目标路径
  */
 // 9/16 2024 更新：返回文件路径到剪切板
-export async function uploadToAList(blob, filePath) {
-    try {
-        const FileName = filePath.split('/').pop()
-        const file = new File([blob], FileName, { type: 'application/zip' });
-        // 创建用于上传的FormData对象
-        const formData = new FormData();
-        formData.append('file', file);
-        outLog(file.name);
-        const token2 = await getToken(alistname, alistmima);
-        showMessage('正在备份到AList...', -1, 'info', '备份到AList');
-        const response = await fetch(`${alistUrl}/api/fs/put`, {
-            method: 'PUT',
-            headers: {
-                'Authorization': token2,
-                'File-Path': encodeURIComponent(filePath),
-                'Content-Type': 'application/octet-stream',
-                'Content-Length': String(file.size),
-                'As-Task': 'true'
-            },
-            body: file
-        });
+// export async function uploadToAList(blob, filePath) {
+//     try {
+//         const FileName = filePath.split('/').pop()
+//         const file = new File([blob], FileName, { type: 'application/zip' });
+//         // 创建用于上传的FormData对象
+//         const formData = new FormData();
+//         formData.append('file', file);
+//         outLog(file.name);
+//         const token2 = await getToken(alistname, alistmima);
+//         showMessage('正在备份到AList...', -1, 'info', '备份到AList');
+//         const response = await fetch(`${alistUrl}/api/fs/put`, {
+//             method: 'PUT',
+//             headers: {
+//                 'Authorization': token2,
+//                 'File-Path': encodeURIComponent(filePath),
+//                 'Content-Type': 'application/octet-stream',
+//                 'Content-Length': String(file.size),
+//                 'As-Task': 'true'
+//             },
+//             body: file
+//         });
 
-        // 检查响应并返回结果
-        console.log(file.name, "asdas");
-        if (response.status === 200) {
-            const result = await response.json();
-            if (result.code === 200) {
-                showMessage('备份到alist成功', 6000, 'info', '备份到AList');
-                // 9/16 2024 更新：返回文件路径到剪切板
-                var markdownLink = `[${FileName}](${alistUrl}${filePath})`;
-                navigator.clipboard.writeText(markdownLink).then(function() {
-                    outLog('Markdown链接已复制到剪贴板', 'uploadToAList');
-                    // 可以在这里添加一个提示，告知用户链接已复制
-          
-                }).catch(function(err) {
-                    console.error('无法复制链接: ', err);
-                    // 可以在这里添加一个错误提示
-                    showMessage('无法复制链接', -1, 'error');
-                });
+//         // 检查响应并返回结果
+//         console.log(file.name, "asdas");
+//         if (response.status === 200) {
+//             const result = await response.json();
+//             if (result.code === 200) {
+//                 showMessage('备份到alist成功', 6000, 'info', '备份到AList');
+//                 // 9/16 2024 更新：返回文件路径到剪切板
+//                 var markdownLink = `[${FileName}](${alistUrl}${filePath})`;
+//                 navigator.clipboard.writeText(markdownLink).then(function() {
+//                     outLog('Markdown链接已复制到剪贴板', 'uploadToAList');
+//                     // 可以在这里添加一个提示，告知用户链接已复制
 
-                console.log("Upload successful.");
-            } else {
-                showMessage('备份到AList失败:' + result.message, -1, 'error', '备份到AList');
-                console.log(`Upload failed. Status code: ${response.status} - Message: ${result.message}`);
-            }
-        } else {
-            showMessage('备份到AList失败:' + await response.text(), -1, 'error', '备份到AList');
-            console.log(`Upload failed. Status code: ${response.status} - Message: ${await response.text()}`);
-        }
-    } catch (error) {
-        showMessage('备份到AList失败:' + error.message, -1, 'error', '备份到AList');
-        console.error('上传出错:', error);
-        throw error; // 将错误向上抛出
-    }
-}
+//                 }).catch(function(err) {
+//                     console.error('无法复制链接: ', err);
+//                     // 可以在这里添加一个错误提示
+//                     showMessage('无法复制链接', -1, 'error');
+//                 });
 
-async function getToken(username, password) {
-    const url = `${alistUrl}/api/auth/login`;
-    const data = { Username: username, Password: password };
-    const response = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
-    });
-    const result = await response.json();
-    console.log(result);
-    return result.data.token;
-}
+//                 console.log("Upload successful.");
+//             } else {
+//                 showMessage('备份到AList失败:' + result.message, -1, 'error', '备份到AList');
+//                 console.log(`Upload failed. Status code: ${response.status} - Message: ${result.message}`);
+//             }
+//         } else {
+//             showMessage('备份到AList失败:' + await response.text(), -1, 'error', '备份到AList');
+//             console.log(`Upload failed. Status code: ${response.status} - Message: ${await response.text()}`);
+//         }
+//     } catch (error) {
+//         showMessage('备份到AList失败:' + error.message, -1, 'error', '备份到AList');
+//         console.error('上传出错:', error);
+//         throw error; // 将错误向上抛出
+//     }
+// }
 
-export async function checkAlistConnection(username, password) {
-    try {
-        const response = await fetch(`${alistUrl}/api/auth/login`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ Username: username, Password: password })
-        });
+// async function getToken(username, password) {
+//     const url = `${alistUrl}/api/auth/login`;
+//     const data = { Username: username, Password: password };
+//     const response = await fetch(url, {
+//         method: 'POST',
+//         headers: { 'Content-Type': 'application/json' },
+//         body: JSON.stringify(data)
+//     });
+//     const result = await response.json();
+//     console.log(result);
+//     return result.data.token;
+// }
 
-        if (response.status === 200) {
-            const result = await response.json();
-            if (result.code === 200) {
-                showMessage('AList 连接成功');
-                console.log('AList 连接成功');
-                return true;
-            } else {
-                showMessage('AList 连接失败，用户名或密码错误');
-                console.log('AList 连接失败:', result.message);
-                return false;
-            }
-        } else {
-            showMessage('AList 连接失败，网络错误');
-            console.log('AList 连接失败，状态码:', response.status);
-            return false;
-        }
-    } catch (error) {
-        showMessage('AList 连接失败，网络错误');
-        console.error('AList 连接失败，错误:', error);
-        return false;
-    }
-}
+// export async function checkAlistConnection(username, password) {
+//     try {
+//         const response = await fetch(`${alistUrl}/api/auth/login`, {
+//             method: 'POST',
+//             headers: { 'Content-Type': 'application/json' },
+//             body: JSON.stringify({ Username: username, Password: password })
+//         });
+
+//         if (response.status === 200) {
+//             const result = await response.json();
+//             if (result.code === 200) {
+//                 showMessage('AList 连接成功');
+//                 console.log('AList 连接成功');
+//                 return true;
+//             } else {
+//                 showMessage('AList 连接失败，用户名或密码错误');
+//                 console.log('AList 连接失败:', result.message);
+//                 return false;
+//             }
+//         } else {
+//             showMessage('AList 连接失败，网络错误');
+//             console.log('AList 连接失败，状态码:', response.status);
+//             return false;
+//         }
+//     } catch (error) {
+//         showMessage('AList 连接失败，网络错误');
+//         console.error('AList 连接失败，错误:', error);
+//         return false;
+//     }
+// }
 
 export function isUrlContained(targetUrl, standardUrl) {
     // 将传入的网址转换为 URL 对象
@@ -1076,6 +1076,6 @@ export function isUrlContained(targetUrl, standardUrl) {
 }
 
 //插入文档方法
-export function insertDoc(){
+export function insertDoc() {
 
 }
